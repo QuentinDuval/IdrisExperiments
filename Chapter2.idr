@@ -1,14 +1,19 @@
 module Chapter2
 
-export
-fibo_recur : Int -> Integer
-fibo_recur n = loop 0 1 n
-  where
-    loop curr next 0 = curr
-    loop curr next n = loop next (curr + next) (n - 1)
+palindrome : String -> Bool
+palindrome s = s == reverse s
 
-export
-fibo_iterate : Nat -> Integer
-fibo_iterate n = fst (index n (iterate next_fib (0, 1)))
-  where
-    next_fib (curr, next) = (next, curr + next)
+palindrome_nocase : String -> Bool
+palindrome_nocase = palindrome . toLower
+
+counts : String -> (Nat, Nat)
+counts str = (length (words str), length str)
+
+top_ten : (Ord a) => List a -> List a
+top_ten = take 10 . sortBy (flip compare)
+
+over_length : Nat -> List String -> List String
+over_length max_len = filter (\s => length s >= max_len)
+
+repl_palindrome : IO ()
+repl_palindrome = repl ">" ((++ "\n") . show . palindrome)

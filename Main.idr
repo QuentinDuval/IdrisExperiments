@@ -1,6 +1,6 @@
 module Main
 
-import Chapter2
+import Fibonacci
 
 main : IO ()
 main = do
