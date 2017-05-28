@@ -31,3 +31,19 @@ insertion_sort [] = []
 insertion_sort (x :: xs) =
   let sorted = insertion_sort xs
   in sorted_insert x sorted
+
+-- Exercises
+my_length : List a -> Nat
+my_length [] = 0
+my_length (x :: xs) = 1 + my_length xs
+
+my_reverse : List a -> List a
+my_reverse xs = foldl (flip (::)) [] xs
+
+my_map : (a -> b) -> List a -> List b
+my_map f [] = []
+my_map f (x :: xs) = f x :: my_map f xs
+
+my_vec_map : (a -> b) -> Vect l a -> Vect l b
+my_vec_map f [] = []
+my_vec_map f (x :: xs) = ?my_vec_map_rhs_2
