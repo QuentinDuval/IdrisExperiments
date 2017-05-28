@@ -19,3 +19,15 @@ mutual
 vec_lengths : Vect l String -> Vect l Nat
 vec_lengths [] = []
 vec_lengths (x :: xs) = length x :: vec_lengths xs
+
+sorted_insert : Ord a => (x : a) -> (sorted : Vect len a) -> Vect (S len) a
+sorted_insert x [] = [x]
+sorted_insert x (y :: xs) =
+  if x > y then (y :: sorted_insert x xs)
+           else (x :: y :: xs)
+
+insertion_sort : Ord a => Vect l a -> Vect l a
+insertion_sort [] = []
+insertion_sort (x :: xs) =
+  let sorted = insertion_sort xs
+  in sorted_insert x sorted
