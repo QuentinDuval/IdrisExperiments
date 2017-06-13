@@ -8,6 +8,7 @@ modules =
   Fibonacci,
   Main,
   Namespaces,
+  Records,
   Strings
 
 executable = TDD
