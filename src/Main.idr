@@ -3,6 +3,7 @@ module Main
 import Chapter2
 import Chapter3
 import Fibonacci
+import InOut
 import Namespaces
 import Records
 import Strings

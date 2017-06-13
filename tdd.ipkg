@@ -6,6 +6,7 @@ modules =
   Chapter2,
   Chapter3,
   Fibonacci,
+  InOut,
   Main,
   Namespaces,
   Records,
