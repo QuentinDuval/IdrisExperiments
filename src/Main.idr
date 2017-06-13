@@ -4,6 +4,7 @@ import Chapter2
 import Chapter3
 import Fibonacci
 import Namespaces
+import Strings
 
 main : IO ()
 main = do

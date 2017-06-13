@@ -7,7 +7,8 @@ modules =
   Chapter3,
   Fibonacci,
   Main,
-  Namespaces
+  Namespaces,
+  Strings
 
 executable = TDD
 main = Main
