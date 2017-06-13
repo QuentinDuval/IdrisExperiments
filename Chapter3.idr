@@ -46,4 +46,4 @@ my_map f (x :: xs) = f x :: my_map f xs
 
 my_vec_map : (a -> b) -> Vect l a -> Vect l b
 my_vec_map f [] = []
-my_vec_map f (x :: xs) = ?my_vec_map_rhs_2
+my_vec_map f (x :: xs) = f x :: my_vec_map f xs
