@@ -2,7 +2,12 @@ package foo
 
 sourcedir = src
 
-modules = Chapter2, Chapter3, Fibonacci, Main
+modules =
+  Chapter2,
+  Chapter3,
+  Fibonacci,
+  Main,
+  Namespaces
 
 executable = TDD
 main = Main
