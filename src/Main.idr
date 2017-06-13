@@ -2,6 +2,7 @@ module Main
 
 import Chapter2
 import Chapter3
+import DoNotation
 import Fibonacci
 import InOut
 import Namespaces

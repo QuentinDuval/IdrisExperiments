@@ -5,6 +5,7 @@ sourcedir = src
 modules =
   Chapter2,
   Chapter3,
+  DoNotation,
   Fibonacci,
   InOut,
   Main,
