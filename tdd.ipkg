@@ -1,0 +1,8 @@
+package foo
+
+sourcedir = src
+
+modules = Chapter2, Chapter3, Fibonacci, Main
+
+executable = TDD
+main = Main
