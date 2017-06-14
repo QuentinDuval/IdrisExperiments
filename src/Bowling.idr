@@ -120,7 +120,11 @@ namespace Version3
   score (MkBowlingState frames bonus) = scores' frames bonus
 
   test_v3 : IO ()
-  test_v3 = printLn (score game3)
+  test_v3 = do
+    printLn $ score $ MkBowlingState (replicate 9 (Roll 4 4) ++ [Strike]) [10, 8]
+    printLn $ score $ MkBowlingState (replicate 10 Strike) [10, 10]
+    printLn $ score $ MkBowlingState (replicate 10 (Spare 6 4)) [10]
+    printLn $ score $ MkBowlingState ([Strike, Strike, Strike, Spare 8 2, Roll 8 0] ++ replicate 5 (Roll 0 0)) []
 
 
 
