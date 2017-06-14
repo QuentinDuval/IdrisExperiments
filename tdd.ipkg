@@ -17,3 +17,4 @@ modules =
 
 executable = TDD
 main = Main
+-- tests = BowlingUnsafe.should_be_300_for_perfect_game

@@ -34,11 +34,32 @@ score (MkBowlingGame frames bonus) = scores' 0 frames (map finToNat bonus)
 
 -- Tests
 
+assertEq : Eq a => (given : a) -> (expected : a) -> IO ()
+assertEq g e = if g == e
+    then putStrLn "Test Passed"
+    else putStrLn "Test Failed"
+
+should_be_300_for_perfect_game : IO ()
+should_be_300_for_perfect_game =
+  assertEq 300 $ score $ MkBowlingGame (replicate 10 Strike) [10, 10]
+
+should_be_164_for_spare_6_4_only_game : IO ()
+should_be_164_for_spare_6_4_only_game =
+  assertEq 164 $ score $ MkBowlingGame (replicate 10 (Roll 6 4)) [10]
+
+should_be_90_for_best_game_without_bonus : IO ()
+should_be_90_for_best_game_without_bonus =
+  assertEq 90 $ score $ MkBowlingGame (replicate 10 (Roll 6 3)) []
+
+should_be_104_for_wikipedia_example : IO ()
+should_be_104_for_wikipedia_example =
+  assertEq 104 $ score $ MkBowlingGame ([Strike, Strike, Strike, Roll 8 2, Roll 8 0] ++ replicate 5 (Roll 0 0)) []
+
 run_tests : IO ()
 run_tests = do
-  printLn $ score $ MkBowlingGame (replicate 9 (Roll 4 4) ++ [Strike]) [10, 8]
-  printLn $ score $ MkBowlingGame (replicate 10 Strike) [10, 10]
-  printLn $ score $ MkBowlingGame (replicate 10 (Roll 6 4)) [10]
-  printLn $ score $ MkBowlingGame ([Strike, Strike, Strike, Roll 8 2, Roll 8 0] ++ replicate 5 (Roll 0 0)) []
+  should_be_300_for_perfect_game
+  should_be_164_for_spare_6_4_only_game
+  should_be_90_for_best_game_without_bonus
+  should_be_104_for_wikipedia_example
 
 --

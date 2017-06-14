@@ -163,10 +163,4 @@ namespace Version3
     printLn $ score $ MkBowlingState (replicate 10 (Spare 6 4)) [10]
     printLn $ score $ MkBowlingState ([Strike, Strike, Strike, Spare 8 2, Roll 8 0] ++ replicate 5 (Roll 0 0)) []
 
-
-
-
-
-
-
 --
