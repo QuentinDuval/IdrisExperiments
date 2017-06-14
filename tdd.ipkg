@@ -4,6 +4,7 @@ sourcedir = src
 
 modules =
   Bowling,
+  BowlingUnsafe,
   Chapter2,
   Chapter3,
   DoNotation,

@@ -1,6 +1,7 @@
 module Main
 
 import Bowling
+import BowlingUnsafe
 import Chapter2
 import Chapter3
 import DoNotation
