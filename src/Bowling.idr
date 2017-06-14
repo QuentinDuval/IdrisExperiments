@@ -2,11 +2,23 @@ module Bowling
 
 import Data.Vect
 
+data IsValidFrame : Nat -> Nat -> Type where
+  ValidFrame : {x, y: Nat} -> { prf: LTE (x + y) 10 } -> IsValidFrame x y
 
-data Frame
-  = Roll Nat Nat  -- Add constraint on both numbers (< 10)
-  | Spare Nat Nat -- Add constraint on both numbers (= 10)
-  | Strike
+-- TODO: Change the encoding to have Fin 11 and Fin 10 for Spare
+-- FAIL: (but then we need also Fin 10 < Fin 11, does not solve the issue)
+
+{-
+is_valid_frame : Nat -> Nat -> Dec (IsValidFrame x y)
+is_valid_frame k j with (decEq (k + j <= 10) True)
+  is_valid_frame k j | Yes Refl = Yes (ValidFrame x y)
+  is_valid_frame k j | No contra = No contra
+  -}
+
+data Frame : Type where
+  Roll : (x : Nat) -> (y : Nat) -> Frame
+  Spare : (x : Nat) -> (y : Nat) -> Frame
+  Strike : Frame
 
 pins : Frame -> List Nat
 pins (Roll x y) = [x, y]
