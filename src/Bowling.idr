@@ -45,27 +45,45 @@ namespace Version1
                             <+> Roll 1 4)
 
 
+
+
 -- Second version, using commands to separate the transitions from repr
 namespace Version2
 
   record GameState where
     constructor MkGameState
-    remaining : Nat
-
-
+    turn_nb : Nat
 
   data GameCmd : GameState -> GameState -> Type where
-    NewTurn : (frame : Frame) -> GameCmd (MkGameState (S (S n))) (MkGameState (S n))
-    EndGame : (frame : Frame) -> (Vect (BonusRolls frame) Int) -> GameCmd (MkGameState (S Z)) (MkGameState 0)
-
-  ||| Alias of the game
-  record Game (turn : Nat) where
-    constructor MkGame
-    turns : Vect turn Frame
+    NewTurn : (frame : Frame) -> GameCmd (MkGameState n) (MkGameState (S n))
+    EndGame : (frame : Frame) -> (Vect (BonusRolls frame) Int) -> GameCmd (MkGameState 9) (MkGameState 10)
 
   ||| Create a new game
-  new_game : (Version2.Game 0)
-  new_game = ?hole
+  new_game : Vect 0 Frame
+  new_game = []
+
+  ||| Add a turn
+  (<+>) : Vect n Frame
+          -> GameCmd (MkGameState n) (MkGameState (S n))
+          -> Vect (S n) Frame
+  (<+>) xs (NewTurn frame) = frame :: xs
+  (<+>) xs (EndGame frame ys) = frame :: xs
+
+  ||| A sample game
+  game2 : Vect 10 Frame
+  game2 = new_game
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> NewTurn (Roll 4 4)
+          <+> EndGame Strike [10, 10]
+
+
 
 
 
