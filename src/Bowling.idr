@@ -8,6 +8,11 @@ data Frame
   | Spare Int Int
   | Strike
 
+pins : Frame -> List Int
+pins (Roll x y) = [x, y]
+pins (Spare x y) = [x, y]
+pins Strike = [10]
+
 BonusRolls : Frame -> Nat
 BonusRolls Strike = 2
 BonusRolls (Spare _ _) = 1
@@ -101,15 +106,21 @@ namespace Version3
 
   throws' : Vect n Frame -> List Int
   throws' [] = []
-  throws' (Strike :: xs) = 10 :: throws' xs
-  throws' (Spare b1 b2 :: xs) = b1 :: b2 :: throws' xs
-  throws' (Roll b1 b2 :: xs) = b1 :: b2 :: throws' xs
+  throws' (f :: fs) = pins f ++ throws' fs
 
-  ||| To count the score, transform to a list
-  throws : BowlingState -> List Int
-  throws (MkBowlingState frames bonus) = throws' frames ++ toList bonus
+  scores' : Vect n Frame -> Vect bonus Int -> Int
+  scores' [] bonus = 0
+  scores' (Roll x y :: fs) bonus = x + y + scores' fs bonus
+  scores' (Spare x y :: fs) bonus
+    = x + y + sum (take 1 (throws' fs ++ toList bonus)) + scores' fs bonus
+  scores' (Strike :: fs) bonus
+    = 10 + sum (take 2 (throws' fs ++ toList bonus)) + scores' fs bonus
 
+  score : BowlingState -> Int
+  score (MkBowlingState frames bonus) = scores' frames bonus
 
+  test_v3 : IO ()
+  test_v3 = printLn (score game3)
 
 
 
