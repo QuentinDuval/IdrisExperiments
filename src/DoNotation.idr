@@ -2,14 +2,11 @@ module DoNotation
 
 data StringBuilder
   = Pure String
-  | Bind StringBuilder (String -> StringBuilder)
-
-(>>=) : StringBuilder -> (String -> StringBuilder) -> StringBuilder
-(>>=) = Bind
+  | (>>=) StringBuilder (String -> StringBuilder)
 
 eval_string : StringBuilder -> String
 eval_string (Pure s) = s
-eval_string (Bind x f) = eval_string (f (eval_string x))
+eval_string (x >>= f) = eval_string (f (eval_string x))
 
 build_john : StringBuilder
 build_john = do
