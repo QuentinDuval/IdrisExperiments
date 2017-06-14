@@ -84,6 +84,20 @@ namespace Version2
           <+> EndGame Strike [10, 10]
 
 
+-- Thrid version, using commands to separate the transitions from repr
+namespace Version3
+
+  record GameState where
+    constructor MkGameState
+    frames : Vect 10 Frame
+    bonus : Vect (BonusRolls (last frames)) Int
+
+  ||| A sample game
+  game3 : Version3.GameState
+  game3 = MkGameState
+            [Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4,
+             Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4, Strike]
+            [10, 8]
 
 
 
