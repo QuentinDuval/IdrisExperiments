@@ -87,17 +87,28 @@ namespace Version2
 -- Thrid version, using commands to separate the transitions from repr
 namespace Version3
 
-  record GameState where
-    constructor MkGameState
+  record BowlingState where
+    constructor MkBowlingState
     frames : Vect 10 Frame
     bonus : Vect (BonusRolls (last frames)) Int
 
   ||| A sample game
-  game3 : Version3.GameState
-  game3 = MkGameState
+  game3 : BowlingState
+  game3 = MkBowlingState
             [Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4,
              Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4, Strike]
             [10, 8]
+
+  throws' : Vect n Frame -> List Int
+  throws' [] = []
+  throws' (Strike :: xs) = 10 :: throws' xs
+  throws' (Spare b1 b2 :: xs) = b1 :: b2 :: throws' xs
+  throws' (Roll b1 b2 :: xs) = b1 :: b2 :: throws' xs
+
+  ||| To count the score, transform to a list
+  throws : BowlingState -> List Int
+  throws (MkBowlingState frames bonus) = throws' frames ++ toList bonus
+
 
 
 
