@@ -4,11 +4,11 @@ import Data.Vect
 
 
 data Frame
-  = Roll Int Int
-  | Spare Int Int
+  = Roll Nat Nat  -- Add constraint on both numbers (< 10)
+  | Spare Nat Nat -- Add constraint on both numbers (= 10)
   | Strike
 
-pins : Frame -> List Int
+pins : Frame -> List Nat
 pins (Roll x y) = [x, y]
 pins (Spare x y) = [x, y]
 pins Strike = [10]
@@ -18,6 +18,7 @@ BonusRolls Strike = 2
 BonusRolls (Spare _ _) = 1
 BonusRolls _ = 0
 
+{-
 
 -- First version, trying to build a data structure with constructors
 -- To constrain the type of a bowling game
@@ -88,6 +89,8 @@ namespace Version2
           <+> NewTurn (Roll 4 4)
           <+> EndGame Strike [10, 10]
 
+-}
+
 
 -- Thrid version, using commands to separate the transitions from repr
 namespace Version3
@@ -95,7 +98,7 @@ namespace Version3
   record BowlingState where
     constructor MkBowlingState
     frames : Vect 10 Frame
-    bonus : Vect (BonusRolls (last frames)) Int
+    bonus : Vect (BonusRolls (last frames)) (Fin 11)
 
   ||| A sample game
   game3 : BowlingState
@@ -104,11 +107,11 @@ namespace Version3
              Roll 4 4, Roll 4 4, Roll 4 4, Roll 4 4, Strike]
             [10, 8]
 
-  throws' : Vect n Frame -> List Int
+  throws' : Vect n Frame -> List Nat
   throws' [] = []
   throws' (f :: fs) = pins f ++ throws' fs
 
-  scores' : Vect n Frame -> Vect bonus Int -> Int
+  scores' : Vect n Frame -> Vect bonus Nat -> Nat
   scores' [] bonus = 0
   scores' (Roll x y :: fs) bonus = x + y + scores' fs bonus
   scores' (Spare x y :: fs) bonus
@@ -116,8 +119,8 @@ namespace Version3
   scores' (Strike :: fs) bonus
     = 10 + sum (take 2 (throws' fs ++ toList bonus)) + scores' fs bonus
 
-  score : BowlingState -> Int
-  score (MkBowlingState frames bonus) = scores' frames bonus
+  score : BowlingState -> Nat
+  score (MkBowlingState frames bonus) = scores' frames (map finToNat bonus)
 
   test_v3 : IO ()
   test_v3 = do
