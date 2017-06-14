@@ -8,13 +8,33 @@ data IsValidFrame : Fin 10 -> Fin 10 -> Type where
 -- TODO: Change the encoding to have Fin 11 and Fin 10 for Spare
 -- FAIL: (but then we need also Fin 10 < Fin 11, does not solve the issue)
 
--- invalid_frame : Not (IsValidFrame x y) -> Void
--- invalid_frame x = ?invalid_frame_rhs1
+{-
+x : Fin 10
+y : Fin 10
+contra : LTE (plus (finToNat x) (finToNat y)) 10 -> Void
+--------------------------------------
+invalid_frame : IsValidFrame x y -> Void
+
+And we have
+ValidFrame : LTE (finToNat x + finToNat y) 10 -> IsValidFrame x y
+
+How to build a contradiction of the type?
+invalid_frame : IsValidFrame x y -> Void
+
+It looks like continuation...
+invalid_frame : (LTE (plus (finToNat x) (finToNat y)) 10 -> Void) -> IsValidFrame x y -> Void
+
+Or look like we need a function "IsValidFrame x y -> LTE (x + y) 10" (ALLOW COMPOSITION)
+
+-}
+
+invalid_frame : (contra : LTE (plus (finToNat x) (finToNat y)) 10 -> Void) -> IsValidFrame x y -> Void
+invalid_frame contra (ValidFrame prf) = contra prf
 
 is_valid_frame : (x : Fin 10) -> (y : Fin 10) -> Dec (IsValidFrame x y)
 is_valid_frame x y with (isLTE (finToNat x + finToNat y) 10)
   is_valid_frame x y | (Yes prf) = Yes (ValidFrame prf)
-  is_valid_frame x y | (No contra) = No ?invalid_frame
+  is_valid_frame x y | (No contra) = No (invalid_frame contra)
 
 data Frame : Type where
   Roll : (x : Nat) -> (y : Nat) -> Frame
