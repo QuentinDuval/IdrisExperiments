@@ -8,6 +8,9 @@ data IsValidFrame : Nat -> Nat -> Type where
 -- TODO: Change the encoding to have Fin 11 and Fin 10 for Spare
 -- FAIL: (but then we need also Fin 10 < Fin 11, does not solve the issue)
 
+-- invalid_frame : Not (IsValidFrame x y) -> Void
+-- invalid_frame x = ?invalid_frame_rhs1
+
 is_valid_frame : (x : Nat) -> (y : Nat) -> Dec (IsValidFrame x y)
 is_valid_frame x y with (isLTE (x + y) 10)
   is_valid_frame x y | (Yes prf) = Yes (ValidFrame prf)
