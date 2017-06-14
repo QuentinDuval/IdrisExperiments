@@ -1,5 +1,6 @@
 module Main
 
+import Bowling
 import Chapter2
 import Chapter3
 import DoNotation

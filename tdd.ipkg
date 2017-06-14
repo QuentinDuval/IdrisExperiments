@@ -3,6 +3,7 @@ package foo
 sourcedir = src
 
 modules =
+  Bowling,
   Chapter2,
   Chapter3,
   DoNotation,
