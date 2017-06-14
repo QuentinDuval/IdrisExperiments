@@ -2,8 +2,8 @@ module Bowling
 
 import Data.Vect
 
-data IsValidFrame : Nat -> Nat -> Type where
-  ValidFrame : LTE (x + y) 10 -> IsValidFrame x y
+data IsValidFrame : Fin 10 -> Fin 10 -> Type where
+  ValidFrame : LTE (finToNat x + finToNat y) 10 -> IsValidFrame x y
 
 -- TODO: Change the encoding to have Fin 11 and Fin 10 for Spare
 -- FAIL: (but then we need also Fin 10 < Fin 11, does not solve the issue)
@@ -11,8 +11,8 @@ data IsValidFrame : Nat -> Nat -> Type where
 -- invalid_frame : Not (IsValidFrame x y) -> Void
 -- invalid_frame x = ?invalid_frame_rhs1
 
-is_valid_frame : (x : Nat) -> (y : Nat) -> Dec (IsValidFrame x y)
-is_valid_frame x y with (isLTE (x + y) 10)
+is_valid_frame : (x : Fin 10) -> (y : Fin 10) -> Dec (IsValidFrame x y)
+is_valid_frame x y with (isLTE (finToNat x + finToNat y) 10)
   is_valid_frame x y | (Yes prf) = Yes (ValidFrame prf)
   is_valid_frame x y | (No contra) = No ?invalid_frame
 
