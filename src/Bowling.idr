@@ -36,6 +36,7 @@ is_valid_frame x y with (isLTE (finToNat x + finToNat y) 10)
   is_valid_frame x y | (Yes prf) = Yes (ValidFrame prf)
   is_valid_frame x y | (No contra) = No (invalid_frame contra)
 
+-- TODO: you cannot put a proof in the frame, since it needs to be homoegenous in a vector...
 data Frame : Type where
   Roll : (x : Nat) -> (y : Nat) -> Frame
   Spare : (x : Nat) -> (y : Nat) -> Frame
