@@ -28,18 +28,8 @@ data Frame : Type where
   Roll : (x, y : Nat) -> Frame
   Strike : Frame
 
-roll : (x, y: Nat) -> Frame
+roll : (x, y: Nat) -> { auto prf : x + y `LTE` 10 } -> Frame
 roll x y = Roll x y
-
-{-
-roll' : FrameCtor x y t -> Frame
-roll' {x} {y} _ = Roll x y
-
-roll'' : (x, y: Nat) -> (t ** FrameCtor x y t)
-roll'' Z Z = (_ ** Gutter)
-roll'' (S n) m = let ((S t) ** r) = roll'' n m in (t ** FRoll r)
-roll'' n (S m) = let ((S t) ** r) = roll'' n m in (t ** SRoll r)
--}
 
 strike : Frame
 strike = Strike
