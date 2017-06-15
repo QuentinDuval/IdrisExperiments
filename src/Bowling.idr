@@ -92,6 +92,10 @@ should_be_164_for_spare_6_4_only_game : IO ()
 should_be_164_for_spare_6_4_only_game =
   assertEq 164 $ score $ MkBowlingGame (replicate 10 (roll 6 4)) [10]
 
+should_be_150_for_5_pins_only_game : IO ()
+should_be_150_for_5_pins_only_game =
+  assertEq 150 $ score $ MkBowlingGame (replicate 10 (roll 5 5)) [5]
+
 should_be_90_for_best_game_without_bonus : IO ()
 should_be_90_for_best_game_without_bonus =
   assertEq 90 $ score $ MkBowlingGame (replicate 10 (roll 6 3)) []
@@ -104,6 +108,7 @@ run_tests : IO ()
 run_tests = do
   should_be_300_for_perfect_game
   should_be_164_for_spare_6_4_only_game
+  should_be_150_for_5_pins_only_game
   should_be_90_for_best_game_without_bonus
   should_be_104_for_wikipedia_example
 
