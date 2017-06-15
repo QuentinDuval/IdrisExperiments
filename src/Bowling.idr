@@ -2,42 +2,20 @@ module Bowling
 
 import Data.Vect
 
-{-
-data IsValidFrame : Fin 10 -> Fin 10 -> Type where
-  ValidFrame : LTE (finToNat x + finToNat y) 10 -> IsValidFrame x y
+SpareBonus : Nat
+SpareBonus = 1
 
-invalid_frame : (contra : LTE (plus (finToNat x) (finToNat y)) 10 -> Void) -> IsValidFrame x y -> Void
-invalid_frame contra (ValidFrame prf) = contra prf
+StrikeBonus : Nat
+StrikeBonus = 2
 
-is_valid_frame : (x : Fin 10) -> (y : Fin 10) -> Dec (IsValidFrame x y)
-is_valid_frame x y with (isLTE (finToNat x + finToNat y) 10)
-  is_valid_frame x y | (Yes prf) = Yes (ValidFrame prf)
-  is_valid_frame x y | (No contra) = No (invalid_frame contra)
--}
+PinCount : Nat
+PinCount = 10
 
--- TODO: prove that the sum is lower or equal than 10 and you are golden...
-
-{-
-data FrameCtor : (x, y, t : Nat) -> Type where
-  Gutter : FrameCtor Z Z 10
-  FRoll : FrameCtor n m (S t) -> FrameCtor (S n) m t
-  SRoll : FrameCtor n m (S t) -> FrameCtor n (S m) t
--}
-
-pinCount : Nat
-pinCount = 10
-
-spareBonus : Nat
-spareBonus = 1
-
-strikeBonus : Nat
-strikeBonus = 2
-
-frameCount : Nat
-frameCount = 10
+FrameCount : Nat
+FrameCount = 10
 
 ValidFrame : (x, y: Nat) -> Type
-ValidFrame x y = (x + y `LTE` pinCount, x `LT` pinCount, y `LT` pinCount)
+ValidFrame x y = (x + y `LTE` PinCount, x `LT` PinCount, y `LT` PinCount)
 
 data Frame : Type where
   TwoRolls : (x, y : Nat) -> { auto prf : ValidFrame x y } -> Frame
@@ -52,17 +30,20 @@ strike = Strike
 --
 
 bonusRolls : Frame -> Nat
-bonusRolls Strike = strikeBonus
-bonusRolls (TwoRolls x y) = if x + y == pinCount then spareBonus else 0
+bonusRolls Strike = StrikeBonus
+bonusRolls (TwoRolls x y) = if x + y == PinCount then SpareBonus else 0
+
+Frames : Type
+Frames = Vect FrameCount Frame
 
 record BowlingGame where
   constructor MkBowlingGame
-  frames : Vect 10 Frame -- TODO: constant
-  bonus : Vect (bonusRolls (last frames)) (Fin 11)
+  frames : Frames
+  bonus : Vect (bonusRolls (last frames)) (Fin (S PinCount))
 
 pins : Frame -> List Nat
 pins (TwoRolls x y) = [x, y]
-pins Strike = [pinCount]
+pins Strike = [PinCount]
 
 throws : Vect n Frame -> List Nat
 throws [] = []
