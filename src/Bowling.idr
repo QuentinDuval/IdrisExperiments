@@ -27,9 +27,9 @@ isSpare : Frame -> Bool
 isSpare (TwoRolls x y) = x + y == PinCount
 isSpare _ = False
 
-pins : Frame -> List Nat
-pins (TwoRolls x y) = [x, y]
-pins Strike = [PinCount]
+knockedPins : Frame -> List Nat
+knockedPins (TwoRolls x y) = [x, y]
+knockedPins Strike = [PinCount]
 
 
 --------------------------------------------------------------------------------
@@ -61,12 +61,12 @@ record BowlingGame where
 
 nextRolls : Vect n Frame -> List Nat
 nextRolls [] = []
-nextRolls (f :: fs) = pins f ++ nextRolls fs
+nextRolls (f :: fs) = knockedPins f ++ nextRolls fs
 
 scores' : Nat -> Vect n Frame -> Vect bonus Nat -> Nat
 scores' current [] bonus = current
 scores' current (f :: fs) bonus =
-  let diff = sum (pins f ++ take (bonusRolls f) (nextRolls fs ++ toList bonus))
+  let diff = sum (knockedPins f ++ take (bonusRolls f) (nextRolls fs ++ toList bonus))
   in scores' (current + diff) fs bonus
 
 score : BowlingGame -> Nat
