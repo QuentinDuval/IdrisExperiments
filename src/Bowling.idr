@@ -23,6 +23,14 @@ roll x y = TwoRolls x y
 strike : Frame
 strike = Strike
 
+isSpare : Frame -> Bool
+isSpare (TwoRolls x y) = x + y == PinCount
+isSpare _ = False
+
+pins : Frame -> List Nat
+pins (TwoRolls x y) = [x, y]
+pins Strike = [PinCount]
+
 
 --------------------------------------------------------------------------------
 -- The Game Types
@@ -39,7 +47,7 @@ FrameCount = 10
 
 bonusRolls : Frame -> Nat
 bonusRolls Strike = StrikeBonus
-bonusRolls (TwoRolls x y) = if x + y == PinCount then SpareBonus else 0
+bonusRolls rolls = if isSpare rolls then SpareBonus else 0
 
 record BowlingGame where
   constructor MkBowlingGame
@@ -50,10 +58,6 @@ record BowlingGame where
 --------------------------------------------------------------------------------
 -- Computing the score
 --------------------------------------------------------------------------------
-
-pins : Frame -> List Nat
-pins (TwoRolls x y) = [x, y]
-pins Strike = [PinCount]
 
 nextRolls : Vect n Frame -> List Nat
 nextRolls [] = []
