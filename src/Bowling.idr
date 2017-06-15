@@ -43,14 +43,19 @@ bonusRolls : Frame -> Nat
 bonusRolls Strike = 2
 bonusRolls rolls = if isSpare rolls then 1 else 0
 
+BonusRollType : Frame -> Type
+BonusRollType f = Vect (bonusRolls f) (Fin (S PinCount))
+
 ValidBonuses : Vect n (Fin (S PinCount)) -> Type
-ValidBonuses {n = Z}      bonuses = Frame
+ValidBonuses {n = Z}      bonuses = LTE 0 0
 ValidBonuses {n = (S _)}  bonuses =
-  Either (head bonuses = 10) (sum (map finToNat bonuses) `LTE` 10)
+  Either
+    (finToNat (head bonuses) = PinCount)
+    (sum (map finToNat bonuses) `LTE` PinCount)
 
 data BowlingGame : Type where
   MkBowlingGame : (frames: Vect FrameCount Frame)
-                  -> (bonuses : Vect (bonusRolls (last frames)) (Fin (S PinCount)))
+                  -> (bonuses : BonusRollType (last frames))
                   -> { auto prf: ValidBonuses bonuses }
                   -> BowlingGame
 
