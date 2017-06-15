@@ -64,18 +64,20 @@ data BowlingGame : Type where
 -- Computing the score
 --------------------------------------------------------------------------------
 
-nextRolls : Vect n Frame -> List Nat
-nextRolls [] = []
-nextRolls (f :: fs) = knockedPins f ++ nextRolls fs
+gameRolls : BowlingGame -> List Nat
+gameRolls (MkBowlingGame frames bonuses) =
+  concatMap knockedPins frames ++ toList (map finToNat bonuses)
 
-scores' : Nat -> Vect n Frame -> Vect bonus Nat -> Nat
-scores' current [] bonus = current
-scores' current (f :: fs) bonus =
-  let diff = sum (knockedPins f ++ take (bonusRolls f) (nextRolls fs ++ toList bonus))
-  in scores' (current + diff) fs bonus
+score' : Nat -> Vect n Frame -> List Nat -> Nat
+score' current [] _ = current
+score' current (f :: fs) rolls =
+  let frameRollNb = length (knockedPins f)
+      scoreRollNb = frameRollNb + bonusRolls f
+      frameScore = sum (take scoreRollNb rolls)
+  in score' (current + frameScore) fs (drop frameRollNb rolls)
 
 score : BowlingGame -> Nat
-score (MkBowlingGame frames bonus) = scores' 0 frames (map finToNat bonus)
+score game@(MkBowlingGame frames bonus) = score' 0 frames (gameRolls game)
 
 
 --------------------------------------------------------------------------------
