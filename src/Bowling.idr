@@ -36,18 +36,12 @@ knockedPins Strike = [PinCount]
 -- The Game Types
 --------------------------------------------------------------------------------
 
-SpareBonus : Nat
-SpareBonus = 1
-
-StrikeBonus : Nat
-StrikeBonus = 2
-
 FrameCount : Nat
 FrameCount = 10
 
 bonusRolls : Frame -> Nat
-bonusRolls Strike = StrikeBonus
-bonusRolls rolls = if isSpare rolls then SpareBonus else 0
+bonusRolls Strike = 2
+bonusRolls rolls = if isSpare rolls then 1 else 0
 
 record BowlingGame where
   constructor MkBowlingGame
