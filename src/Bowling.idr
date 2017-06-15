@@ -24,8 +24,20 @@ data FrameCtor : (x, y, t : Nat) -> Type where
   SRoll : FrameCtor n m (S t) -> FrameCtor n (S m) t
 -}
 
+pinCount : Nat
+pinCount = 10
+
+spareBonus : Nat
+spareBonus = 1
+
+strikeBonus : Nat
+strikeBonus = 2
+
+frameCount : Nat
+frameCount = 10
+
 ValidFrame : (x, y: Nat) -> Type
-ValidFrame x y = (x + y `LTE` 10, x `LT` 10, y `LT` 10)
+ValidFrame x y = (x + y `LTE` pinCount, x `LT` pinCount, y `LT` pinCount)
 
 data Frame : Type where
   TwoRolls : (x, y : Nat) -> { auto prf : ValidFrame x y } -> Frame
@@ -40,17 +52,17 @@ strike = Strike
 --
 
 bonusRolls : Frame -> Nat
-bonusRolls Strike = 2
-bonusRolls (TwoRolls x y) = if x + y == 10 then 1 else 0
+bonusRolls Strike = strikeBonus
+bonusRolls (TwoRolls x y) = if x + y == pinCount then spareBonus else 0
 
 record BowlingGame where
   constructor MkBowlingGame
-  frames : Vect 10 Frame
+  frames : Vect 10 Frame -- TODO: constant
   bonus : Vect (bonusRolls (last frames)) (Fin 11)
 
 pins : Frame -> List Nat
 pins (TwoRolls x y) = [x, y]
-pins Strike = [10]
+pins Strike = [pinCount]
 
 throws : Vect n Frame -> List Nat
 throws [] = []
