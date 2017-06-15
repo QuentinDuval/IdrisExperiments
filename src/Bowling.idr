@@ -33,26 +33,23 @@ bonusRolls : Frame -> Nat
 bonusRolls Strike = StrikeBonus
 bonusRolls (TwoRolls x y) = if x + y == PinCount then SpareBonus else 0
 
-Frames : Type
-Frames = Vect FrameCount Frame
-
 record BowlingGame where
   constructor MkBowlingGame
-  frames : Frames
+  frames : Vect FrameCount Frame
   bonus : Vect (bonusRolls (last frames)) (Fin (S PinCount))
 
 pins : Frame -> List Nat
 pins (TwoRolls x y) = [x, y]
 pins Strike = [PinCount]
 
-throws : Vect n Frame -> List Nat
-throws [] = []
-throws (f :: fs) = pins f ++ throws fs
+nextRolls : Vect n Frame -> List Nat
+nextRolls [] = []
+nextRolls (f :: fs) = pins f ++ nextRolls fs
 
 scores' : Nat -> Vect n Frame -> Vect bonus Nat -> Nat
 scores' current [] bonus = current
 scores' current (f :: fs) bonus =
-  let diff = sum (pins f ++ take (bonusRolls f) (throws fs ++ toList bonus))
+  let diff = sum (pins f ++ take (bonusRolls f) (nextRolls fs ++ toList bonus))
   in scores' (current + diff) fs bonus
 
 score : BowlingGame -> Nat
