@@ -2,17 +2,13 @@ module Bowling
 
 import Data.Vect
 
-SpareBonus : Nat
-SpareBonus = 1
 
-StrikeBonus : Nat
-StrikeBonus = 2
+--------------------------------------------------------------------------------
+-- The Frames
+--------------------------------------------------------------------------------
 
 PinCount : Nat
 PinCount = 10
-
-FrameCount : Nat
-FrameCount = 10
 
 ValidFrame : (x, y: Nat) -> Type
 ValidFrame x y = (x + y `LTE` PinCount, x `LT` PinCount, y `LT` PinCount)
@@ -27,7 +23,19 @@ roll x y = TwoRolls x y
 strike : Frame
 strike = Strike
 
---
+
+--------------------------------------------------------------------------------
+-- The Game Types
+--------------------------------------------------------------------------------
+
+SpareBonus : Nat
+SpareBonus = 1
+
+StrikeBonus : Nat
+StrikeBonus = 2
+
+FrameCount : Nat
+FrameCount = 10
 
 bonusRolls : Frame -> Nat
 bonusRolls Strike = StrikeBonus
@@ -37,6 +45,11 @@ record BowlingGame where
   constructor MkBowlingGame
   frames : Vect FrameCount Frame
   bonus : Vect (bonusRolls (last frames)) (Fin (S PinCount))
+
+
+--------------------------------------------------------------------------------
+-- Computing the score
+--------------------------------------------------------------------------------
 
 pins : Frame -> List Nat
 pins (TwoRolls x y) = [x, y]
@@ -55,7 +68,10 @@ scores' current (f :: fs) bonus =
 score : BowlingGame -> Nat
 score (MkBowlingGame frames bonus) = scores' 0 frames (map finToNat bonus)
 
--- Tests
+
+--------------------------------------------------------------------------------
+-- Unit Tests
+--------------------------------------------------------------------------------
 
 assertEq : Eq a => (given : a) -> (expected : a) -> IO ()
 assertEq g e = if g == e
