@@ -43,10 +43,16 @@ bonusRolls : Frame -> Nat
 bonusRolls Strike = 2
 bonusRolls rolls = if isSpare rolls then 1 else 0
 
-record BowlingGame where
-  constructor MkBowlingGame
-  frames : Vect FrameCount Frame
-  bonus : Vect (bonusRolls (last frames)) (Fin (S PinCount))
+ValidBonuses : Vect n (Fin (S PinCount)) -> Type
+ValidBonuses {n = Z}      bonuses = Frame
+ValidBonuses {n = (S _)}  bonuses =
+  Either (head bonuses = 10) (sum (map finToNat bonuses) `LTE` 10)
+
+data BowlingGame : Type where
+  MkBowlingGame : (frames: Vect FrameCount Frame)
+                  -> (bonuses : Vect (bonusRolls (last frames)) (Fin (S PinCount)))
+                  -> { auto prf: ValidBonuses bonuses }
+                  -> BowlingGame
 
 
 --------------------------------------------------------------------------------
