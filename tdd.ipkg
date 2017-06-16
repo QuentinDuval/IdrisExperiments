@@ -9,6 +9,7 @@ modules =
   Chapter3,
   DoNotation,
   Fibonacci,
+  HexagonalSNCF,
   InOut,
   Main,
   Namespaces,

@@ -6,6 +6,7 @@ import Chapter2
 import Chapter3
 import DoNotation
 import Fibonacci
+import HexagonalSNCF
 import InOut
 import Namespaces
 import Records
