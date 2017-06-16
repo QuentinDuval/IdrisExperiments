@@ -22,11 +22,6 @@ record ReservationRequest where
   seatCount : Nat
   dateTime : DateTime
 
-record ReservationCommand where
-  constructor MkReservationCommand
-  trainId : TrainId
-  coachId : CoachId
-
 record CoachTypology where
   constructor MkCoachTypology
   coachId : CoachId
@@ -37,9 +32,23 @@ record TrainTypology where
   trainId : TrainId
   coaches : List CoachTypology
 
-data Reservation -- Use either or error?
-  = ConfirmedReservation String
-  | FailedReservation String
+record ReservationCommand where
+  constructor MkReservationCommand
+  trainId : TrainId
+  coachId : CoachId
+
+data ReservationError
+  = TechnicalError -- TODO: could be made such that the evaluator handles them
+  | CoachIsFull
+
+record ConfirmedReservation where
+  constructor MkConfirmedReservation
+  trainId : TrainId
+  coachId : CoachId
+  seatNbs : List Int
+
+Reservation : Type
+Reservation = Either ReservationError ConfirmedReservation
 
 
 --------------------------------------------------------------------------------
@@ -89,7 +98,7 @@ bestTypology seatCount typologies = ?bestTypology
 -- TODO: check the typology of the coaches to put the same family in one coach
 -- TODO: ideally, we should not go over 70% in one coach
 
-reserve : ReservationRequest -> ReservationExpr Reservation
+reserve : ReservationRequest -> ReservationExpr (Maybe Reservation)
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
@@ -97,7 +106,7 @@ reserve request = do
   -- TODO: might not be any command...
   r <- Reserve command
   -- TODO: handle errors (race conditions... ask for retry or abort)
-  Pure r
+  Pure (Just r)
 
 
 
