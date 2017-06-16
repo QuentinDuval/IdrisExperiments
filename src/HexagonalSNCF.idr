@@ -28,10 +28,16 @@ data ReservationExpr : Type -> Type where
 (>>=): ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 (>>=) = Bind
 
-{-
 implementation Functor ReservationExpr where
-  map fn (ReservationExpr a) = ReservationExpr (fn a)
--}
+  map fn expr = Bind expr (Pure . fn)
+
+implementation Applicative ReservationExpr where
+  pure = Pure
+  fExpr <*> aExpr = do
+    fn <- fExpr
+    expr <- aExpr
+    Pure (fn expr)
+
 
 ||| Interpreter: this is the transformation from the abstract problem
 ||| to the real world (allows to plug the SPI without Dependency Injection)
