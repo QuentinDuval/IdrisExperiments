@@ -1,5 +1,10 @@
 module HexagonalSNCF
 
+
+--------------------------------------------------------------------------------
+-- Domain types
+--------------------------------------------------------------------------------
+
 TrainId : Type
 TrainId = String
 
@@ -16,7 +21,11 @@ data Reservation -- Use either or error?
   = ConfirmedReservation String
   | FailedReservation String
 
-||| Definition of the DSL for reservation
+
+--------------------------------------------------------------------------------
+-- Definition of the DSL for reservation
+--------------------------------------------------------------------------------
+
 data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
   SearchTrain : ReservationRequest -> ReservationExpr (List TrainId)
@@ -36,21 +45,28 @@ implementation Applicative ReservationExpr where
   fExpr <*> aExpr = fExpr >>= \f => map f aExpr
 
 
-||| Interpreter: this is the transformation from the abstract problem
-||| to the real world (allows to plug the SPI without Dependency Injection)
+--------------------------------------------------------------------------------
+-- Interpreter: this is the transformation from the abstract problem
+-- to the real world (allows to plug the SPI without Dependency Injection)
+--------------------------------------------------------------------------------
+
 evalReservation : ReservationExpr ty -> IO ty
 evalReservation = ?hole
 
-||| The code (should follow the rule of the DSL)
-||| Decoupling is pretty good:
-||| - Invariants of the Business Rules are in the DSL
-||| - Implementation of the SPI are in the interpreter
-||| - Current implementation that satisfies the rules is exression of the DSL
+
+--------------------------------------------------------------------------------
+-- The code (should follow the rule of the DSL)
+-- Decoupling is pretty good:
+-- * Invariants of the Business Rules are in the DSL
+-- * Implementation of the SPI are in the interpreter
+-- * Current implementation that satisfies the rules is exression of the DSL
+--------------------------------------------------------------------------------
+
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
   trainIds <- SearchTrain request
   typologies <- sequence (map GetTypology trainIds)
-  -- Exploit the typology there
+  -- Exploit the typology there (search for the matching)
   r <- Reserve "ID of the train" "Coach ID"
   Pure r
 
