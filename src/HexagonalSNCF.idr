@@ -48,9 +48,8 @@ evalReservation = ?hole
 ||| - Current implementation that satisfies the rules is exression of the DSL
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
-  tradeIds <- SearchTrain request
-  -- ?hole <- sequence GetTypology tradeIds
-  t <- GetTypology "ID of the train"
+  trainIds <- SearchTrain request
+  typologies <- sequence (map GetTypology trainIds)
   -- Exploit the typology there
   r <- Reserve "ID of the train" "Coach ID"
   Pure r
