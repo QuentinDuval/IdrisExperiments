@@ -29,14 +29,11 @@ data ReservationExpr : Type -> Type where
 (>>=) = Bind
 
 implementation Functor ReservationExpr where
-  map fn expr = Bind expr (Pure . fn)
+  map fn expr = expr >>= Pure . fn
 
 implementation Applicative ReservationExpr where
   pure = Pure
-  fExpr <*> aExpr = do
-    fn <- fExpr
-    expr <- aExpr
-    Pure (fn expr)
+  fExpr <*> aExpr = fExpr >>= \f => map f aExpr
 
 
 ||| Interpreter: this is the transformation from the abstract problem
