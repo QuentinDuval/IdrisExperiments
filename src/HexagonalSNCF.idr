@@ -1,6 +1,9 @@
 module HexagonalSNCF
 
 
+-- https://github.com/emilybache/KataTrainReservation
+
+
 --------------------------------------------------------------------------------
 -- Domain types
 --------------------------------------------------------------------------------
@@ -15,7 +18,7 @@ DateTime : Type
 DateTime = Int
 
 record ReservationRequest where
-  constructor MkRequest
+  constructor MkReservationRequest
   seatCount : Nat
   dateTime : DateTime
 
@@ -24,8 +27,15 @@ record ReservationCommand where
   trainId : TrainId
   coachId : CoachId
 
-TrainTypology : Type
-TrainTypology = List String
+record CoachTypology where
+  constructor MkCoachTypology
+  coachId : CoachId
+  availableSeats : List Int
+
+record TrainTypology where
+  constructor MkTrainTypology
+  trainId : TrainId
+  coaches : List CoachTypology
 
 data Reservation -- Use either or error?
   = ConfirmedReservation String
@@ -74,6 +84,10 @@ evalReservation = ?hole
 
 bestTypology : Nat -> List TrainTypology -> ReservationCommand
 bestTypology seatCount typologies = ?bestTypology
+
+-- TODO: sum the total seats to check that will not go over 70% of the train
+-- TODO: check the typology of the coaches to put the same family in one coach
+-- TODO: ideally, we should not go over 70% in one coach
 
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
