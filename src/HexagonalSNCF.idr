@@ -94,6 +94,7 @@ reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
   let command = bestTypology (seatCount request) typologies
+  -- TODO: might not be any command...
   r <- Reserve command
   -- TODO: handle errors (race conditions... ask for retry or abort)
   Pure r
