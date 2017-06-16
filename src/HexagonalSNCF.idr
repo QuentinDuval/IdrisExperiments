@@ -91,6 +91,13 @@ evalReservation = ?hole
 -- * Current implementation that satisfies the rules is exression of the DSL
 --------------------------------------------------------------------------------
 
+toCoachTypologies : List TrainTypology -> List (TrainId, CoachTypology)
+toCoachTypologies trains = concat (map trainTypologies trains)
+  where
+    trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
+
+-- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that
+
 bestTypology : Nat -> List TrainTypology -> ReservationCommand
 bestTypology seatCount typologies = ?bestTypology
 
