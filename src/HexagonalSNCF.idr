@@ -98,7 +98,7 @@ bestTypology seatCount typologies = ?bestTypology
 -- TODO: check the typology of the coaches to put the same family in one coach
 -- TODO: ideally, we should not go over 70% in one coach
 
-reserve : ReservationRequest -> ReservationExpr (Maybe Reservation)
+reserve : ReservationRequest -> ReservationExpr Reservation -- TODO: should be different errors (mapping is nice!)
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
@@ -106,7 +106,7 @@ reserve request = do
   -- TODO: might not be any command...
   r <- Reserve command
   -- TODO: handle errors (race conditions... ask for retry or abort)
-  Pure (Just r)
+  Pure r
 
 
 
