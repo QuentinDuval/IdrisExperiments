@@ -17,6 +17,9 @@ TrainTypology = List String
 ReservationRequest : Type
 ReservationRequest = String
 
+ReservationCommand : Type
+ReservationCommand = String -- TrainID and CoachId
+
 data Reservation -- Use either or error?
   = ConfirmedReservation String
   | FailedReservation String
@@ -30,7 +33,7 @@ data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
   SearchTrain : ReservationRequest -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
-  Reserve : TrainId -> CoachId -> ReservationExpr Reservation
+  Reserve : ReservationCommand -> ReservationExpr Reservation
   Pure : ta -> ReservationExpr ta
   Bind : ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 
@@ -62,14 +65,17 @@ evalReservation = ?hole
 -- * Current implementation that satisfies the rules is exression of the DSL
 --------------------------------------------------------------------------------
 
+bestTypology : List TrainTypology -> ReservationCommand
+bestTypology = ?bestTypology
+
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
   trainIds <- SearchTrain request
   typologies <- sequence (map GetTypology trainIds)
-  -- Exploit the typology there (search for the matching)
-  r <- Reserve "ID of the train" "Coach ID"
+  let command = bestTypology typologies
+  r <- Reserve command
+  -- TODO: handle errors (race conditions... ask for retry or abort)
   Pure r
-
 
 
 
