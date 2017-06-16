@@ -19,11 +19,19 @@ data Reservation -- Use either or error?
 ||| Definition of the DSL for reservation
 data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
-  -- TODO: add something to get the train IDs based on the criteria of the request
+  SearchTrain : ReservationRequest -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
   Reserve : TrainId -> CoachId -> ReservationExpr Reservation
   Pure : ta -> ReservationExpr ta
-  (>>=): ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
+  Bind : ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
+
+(>>=): ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
+(>>=) = Bind
+
+{-
+implementation Functor ReservationExpr where
+  map fn (ReservationExpr a) = ReservationExpr (fn a)
+-}
 
 ||| Interpreter: this is the transformation from the abstract problem
 ||| to the real world (allows to plug the SPI without Dependency Injection)
@@ -37,6 +45,8 @@ evalReservation = ?hole
 ||| - Current implementation that satisfies the rules is exression of the DSL
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
+  tradeIds <- SearchTrain request
+  -- ?hole <- sequence GetTypology tradeIds
   t <- GetTypology "ID of the train"
   -- Exploit the typology there
   r <- Reserve "ID of the train" "Coach ID"
