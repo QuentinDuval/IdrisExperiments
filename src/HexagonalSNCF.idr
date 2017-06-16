@@ -11,14 +11,21 @@ TrainId = String
 CoachId : Type
 CoachId = String
 
+DateTime : Type
+DateTime = Int
+
+record ReservationRequest where
+  constructor MkRequest
+  seatCount : Nat
+  dateTime : DateTime
+
+record ReservationCommand where
+  constructor MkReservationCommand
+  trainId : TrainId
+  coachId : CoachId
+
 TrainTypology : Type
 TrainTypology = List String
-
-ReservationRequest : Type
-ReservationRequest = String
-
-ReservationCommand : Type
-ReservationCommand = String -- TrainID and CoachId
 
 data Reservation -- Use either or error?
   = ConfirmedReservation String
@@ -31,7 +38,7 @@ data Reservation -- Use either or error?
 
 data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
-  SearchTrain : ReservationRequest -> ReservationExpr (List TrainId)
+  SearchTrain : DateTime -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
   Reserve : ReservationCommand -> ReservationExpr Reservation
   Pure : ta -> ReservationExpr ta
@@ -65,14 +72,14 @@ evalReservation = ?hole
 -- * Current implementation that satisfies the rules is exression of the DSL
 --------------------------------------------------------------------------------
 
-bestTypology : List TrainTypology -> ReservationCommand
-bestTypology = ?bestTypology
+bestTypology : Nat -> List TrainTypology -> ReservationCommand
+bestTypology seatCount typologies = ?bestTypology
 
 reserve : ReservationRequest -> ReservationExpr Reservation
 reserve request = do
-  trainIds <- SearchTrain request
+  trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
-  let command = bestTypology typologies
+  let command = bestTypology (seatCount request) typologies
   r <- Reserve command
   -- TODO: handle errors (race conditions... ask for retry or abort)
   Pure r
