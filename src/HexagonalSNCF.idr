@@ -119,7 +119,7 @@ coachOccupancy coach =
   let totalSeats = totalSeatCount coach
       takenSeats = length (availableSeats coach)
   in case isLTE takenSeats totalSeats of
-        Yes prf => MkOccupancyRatio takenSeats totalSeats
+        Yes prf => MkOccupancyRatio totalSeats (totalSeats - takenSeats)
         No contra => MkOccupancyRatio totalSeats totalSeats
 
 trainOccupancy : TrainTypology -> OccupancyRatio
