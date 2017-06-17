@@ -47,6 +47,12 @@ Show Reservation where
                ++ show (coachId r )++ ","
                ++ show (seatNbs r) ++ "}"
 
+Eq Reservation where
+  r1 == r2 = toTuple r1 == toTuple r2
+    where
+      toTuple : Reservation -> (TrainId, CoachId, List SeatId)
+      toTuple r = (trainId r, coachId r, seatNbs r)
+
 data ReservationResult
   = Confirmed Reservation
   | NoTrainAvailable
@@ -212,12 +218,19 @@ occupancy_ratio_test = do
 coach_occupancy_test : IO ()
 coach_occupancy_test = do
   assertEq (MkOccupancyRatio 4 100) (coachOccupancy (MkCoachTypology "A" 100 [5..100]))
+  assertEq (MkOccupancyRatio 8 200) (trainOccupancy (MkTrainTypology "T" [ MkCoachTypology "A" 100 [4..100]
+                                                                         , MkCoachTypology "B" 100 [6..100] ]))
+
+coach_reservation_test : IO ()
+coach_reservation_test = do
+  assertEq (MkReservation "T" "A" [5..14]) $ coachToReservation 10 ("T", MkCoachTypology "A" 100 [5..100])
 
 run_tests : IO ()
 run_tests = do
   putStrLn "Occupancy Tests"
   occupancy_ratio_test
   coach_occupancy_test
+  coach_reservation_test
 
   putStrLn "Acceptance Tests"
   let request = MkReservationRequest 10 10
