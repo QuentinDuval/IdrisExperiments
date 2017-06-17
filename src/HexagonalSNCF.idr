@@ -47,9 +47,13 @@ Show Reservation where
                ++ show (coachId r )++ ","
                ++ show (seatNbs r) ++ "}"
 
-ReservationResult : Type
-ReservationResult = Maybe Reservation
+data ReservationResult
+  = Confirmed Reservation
+  | NoTrainAvailable
 
+Show ReservationResult where
+  show (Confirmed r) = "Confirmed: " ++ show r
+  show NoTrainAvailable = "No Trains Available"
 
 --------------------------------------------------------------------------------
 -- Definition of the DSL for reservation
@@ -85,7 +89,7 @@ evalReservation (GetTypology trainId) =
   if trainId == "T1"
     then pure $ MkTrainTypology "T1" [MkCoachTypology "A" 100 [5..100]]
     else pure $ MkTrainTypology "T2" [MkCoachTypology "A" 100 [5..100]]
-evalReservation (Reserve command) = pure $ Just command -- TODO: introduce errors
+evalReservation (Reserve command) = pure $ Confirmed command -- TODO: introduce errors
 evalReservation (Pure val) = pure val
 evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
 
@@ -162,7 +166,7 @@ reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
   case bestTypology (seatCount request) typologies of
-    Nothing       => Pure Nothing -- TODO: better errors
+    Nothing       => Pure NoTrainAvailable
     Just command  => do
       r <- Reserve command
       -- TODO: handle errors (race conditions... ask for retry or abort)
@@ -178,8 +182,6 @@ run_tests : IO ()
 run_tests = do
   let request = MkReservationRequest 10 10
   result <- evalReservation (reserve request)
-  case result of
-    Nothing => putStrLn "Error"
-    Just ok => printLn ok
+  printLn result
 
 --
