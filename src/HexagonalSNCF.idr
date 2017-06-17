@@ -64,6 +64,7 @@ data ReservationExpr : Type -> Type where
   SearchTrain : DateTime -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
   Reserve : Reservation -> ReservationExpr (Maybe Reservation)
+  Log : String -> ReservationExpr ()
   Pure : ta -> ReservationExpr ta
   Bind : ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 
@@ -84,6 +85,7 @@ Applicative ReservationExpr where
 --------------------------------------------------------------------------------
 
 evalReservation : ReservationExpr ty -> IO ty
+evalReservation (Log msg) = putStrLn msg
 evalReservation (Pure val) = pure val
 evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
 evalReservation (SearchTrain dateTime) = pure ["T1", "T2"]
@@ -174,7 +176,9 @@ reserve : ReservationRequest -> ReservationExpr ReservationResult
 reserve request = do
     trainIds <- SearchTrain (dateTime request)
     typologies <- sequence (map GetTypology trainIds)
-    confirmByPref $ reservationsByDecreasingPreference (seatCount request) typologies
+    let reservations = reservationsByDecreasingPreference (seatCount request) typologies
+    Log (show reservations)
+    confirmByPref reservations
   where
     confirmByPref [] = Pure NoTrainAvailable
     confirmByPref (r::rs) = do
