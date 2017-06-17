@@ -113,6 +113,9 @@ record OccupancyRatio where
   occupied : Nat
   seatCount : Nat
 
+Show OccupancyRatio where
+  show r = "(" ++ show (occupied r) ++ ", " ++ show (seatCount r) ++ ")"
+
 Semigroup OccupancyRatio where
   (<+>) a b = MkOccupancyRatio (occupied a + occupied b) (seatCount a + seatCount b)
 
@@ -124,6 +127,9 @@ occupancyPercent r =
   if occupied r >= seatCount r
     then 1.0
     else cast (occupied r) / cast (seatCount r)
+
+Eq OccupancyRatio where
+  r1 == r2 = occupancyPercent r1 == occupancyPercent r2
 
 belowThreshold : Double -> OccupancyRatio -> Bool
 belowThreshold threshold ratio = occupancyPercent ratio <= threshold
@@ -147,9 +153,9 @@ CoachMaxOccupancy = 0.8
 coachOccupancy : CoachTypology -> OccupancyRatio
 coachOccupancy coach =
   let totalSeats = totalSeatCount coach
-      takenSeats = length (availableSeats coach)
-  in case isLTE takenSeats totalSeats of
-        Yes prf => MkOccupancyRatio totalSeats (totalSeats - takenSeats)
+      freeSeats = length (availableSeats coach)
+  in case isLTE freeSeats totalSeats of
+        Yes prf => MkOccupancyRatio (totalSeats - freeSeats) totalSeats
         No contra => MkOccupancyRatio totalSeats totalSeats
 
 trainOccupancy : TrainTypology -> OccupancyRatio
@@ -192,8 +198,28 @@ reserve request = do
 -- Run Tests
 --------------------------------------------------------------------------------
 
+assertEq : (Eq a, Show a) => (given : a) -> (expected : a) -> IO ()
+assertEq g e = if g == e
+  then putStrLn $ "Test Passed!"
+  else putStrLn $ "Test Failed: " ++ show g ++ " /= " ++ show e
+
+occupancy_ratio_test : IO ()
+occupancy_ratio_test = do
+  assertEq True $ belowThreshold 0.7 (MkOccupancyRatio 6 10)
+  assertEq True $ belowThreshold 0.7 (MkOccupancyRatio 7 10)
+  assertEq False $ belowThreshold 0.7 (MkOccupancyRatio 8 10)
+
+coach_occupancy_test : IO ()
+coach_occupancy_test = do
+  assertEq (MkOccupancyRatio 4 100) (coachOccupancy (MkCoachTypology "A" 100 [5..100]))
+
 run_tests : IO ()
 run_tests = do
+  putStrLn "Occupancy Tests"
+  occupancy_ratio_test
+  coach_occupancy_test
+
+  putStrLn "Acceptance Tests"
   let request = MkReservationRequest 10 10
   result <- evalReservation (reserve request)
   printLn result
