@@ -84,7 +84,11 @@ Applicative ReservationExpr where
 --------------------------------------------------------------------------------
 
 evalReservation : ReservationExpr ty -> IO ty
-evalReservation = ?hole
+evalReservation (SearchTrain x) = ?evalReservation_rhs_1
+evalReservation (GetTypology x) = ?evalReservation_rhs_2
+evalReservation (Reserve x) = ?evalReservation_rhs_3
+evalReservation (Pure x) = ?evalReservation_rhs_4
+evalReservation (Bind x f) = ?evalReservation_rhs_5
 
 
 --------------------------------------------------------------------------------
@@ -142,12 +146,12 @@ toCoachTypologies trains = concat (map trainTypologies trains)
   where
     trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
 
-    -- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
+-- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
 
 bestTypology : Nat -> List TrainTypology -> Maybe ReservationCommand
 bestTypology seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
-  in ?bestTYpology
+  in Nothing -- TODO
 
 -- TODO: sum the total seats to check that will not go over 70% of the train
 -- TODO: check the typology of the coaches to put the same family in one coach
@@ -157,9 +161,7 @@ reserve : ReservationRequest -> ReservationExpr Reservation -- TODO: should be d
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
-  let command = bestTypology (seatCount request) typologies
-  -- TODO: might not be any command...
-  case command of
+  case bestTypology (seatCount request) typologies of
     Nothing       => Pure (Left CoachIsFull)
     Just command  => do
       r <- Reserve command
