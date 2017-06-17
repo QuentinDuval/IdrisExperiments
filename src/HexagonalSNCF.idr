@@ -144,7 +144,7 @@ toCoachTypologies trains = concat (map trainTypologies trains)
 
     -- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
 
-bestTypology : Nat -> List TrainTypology -> ReservationCommand
+bestTypology : Nat -> List TrainTypology -> Maybe ReservationCommand
 bestTypology seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
   in ?bestTYpology
@@ -159,9 +159,12 @@ reserve request = do
   typologies <- sequence (map GetTypology trainIds)
   let command = bestTypology (seatCount request) typologies
   -- TODO: might not be any command...
-  r <- Reserve command
-  -- TODO: handle errors (race conditions... ask for retry or abort)
-  Pure r
+  case command of
+    Nothing       => Pure (Left CoachIsFull)
+    Just command  => do
+      r <- Reserve command
+      -- TODO: handle errors (race conditions... ask for retry or abort)
+      Pure r
 
 
 
