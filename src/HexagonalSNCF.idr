@@ -149,12 +149,13 @@ toCoachTypologies trains = concat (map trainTypologies trains)
   where
     trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
 
--- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
-
-bestTypology : Nat -> List TrainTypology -> Maybe Reservation
-bestTypology seatRequest trains =
+reservationsByDecreasingPreference : Nat -> List TrainTypology -> List Reservation
+reservationsByDecreasingPreference seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
-  in Nothing -- TODO
+      allCoaches = toCoachTypologies freeTrains
+      bestCoaches = filter (belowThreshold CoachMaxOccupancy . addOccupied seatRequest . coachOccupancy . snd) allCoaches
+      nextCoaches = filter (belowThreshold 100.0 . addOccupied seatRequest . coachOccupancy . snd) allCoaches
+  in [] -- TODO
 
 -- TODO: sum the total seats to check that will not go over 70% of the train
 -- TODO: check the typology of the coaches to put the same family in one coach
@@ -165,9 +166,9 @@ reserve : ReservationRequest -> ReservationExpr ReservationResult
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
-  case bestTypology (seatCount request) typologies of
-    Nothing       => Pure NoTrainAvailable
-    Just command  => do
+  case reservationsByDecreasingPreference (seatCount request) typologies of
+    [] => Pure NoTrainAvailable
+    (command :: _)  => do
       r <- Reserve command
       -- TODO: handle errors (race conditions... ask for retry or abort)
       Pure r
