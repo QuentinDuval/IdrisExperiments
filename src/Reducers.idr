@@ -1,16 +1,15 @@
 module Reducers
 
+
+--------------------------------------------------------------------------------
+-- Core library
+--------------------------------------------------------------------------------
+
 StepL : (acc: Type) -> (elem: Type) -> Type
 StepL acc elem = acc -> elem -> acc
 
 ReducerL : (acc: Type) -> (a: Type) -> (b: Type) -> Type
 ReducerL acc a b = StepL acc a -> StepL acc b
-
-mapping : (outer -> inner) -> ReducerL acc inner outer
-mapping fn step = \acc, outer => step acc (fn outer)
-
-filtering : (elem -> Bool) -> ReducerL acc elem elem
-filtering pf step = \acc, elem => if pf elem then step acc elem else acc
 
 infixr 5 |>
 
@@ -22,6 +21,20 @@ namespace Terminal
   (|>) : ReducerL acc inner outer -> StepL acc inner -> StepL acc outer
   (|>) r step = r step
 
+
+--------------------------------------------------------------------------------
+-- Useful reducers
+--------------------------------------------------------------------------------
+
+mapping : (outer -> inner) -> ReducerL acc inner outer
+mapping fn step = \acc, outer => step acc (fn outer)
+
+filtering : (elem -> Bool) -> ReducerL acc elem elem
+filtering pf step = \acc, elem => if pf elem then step acc elem else acc
+
+
+--------------------------------------------------------------------------------
+-- Some tests
 --------------------------------------------------------------------------------
 
 run_test : IO ()
