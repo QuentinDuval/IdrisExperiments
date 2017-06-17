@@ -79,19 +79,14 @@ Applicative ReservationExpr where
 --------------------------------------------------------------------------------
 
 evalReservation : ReservationExpr ty -> IO ty
-
-evalReservation (SearchTrain dateTime) =
-  pure ["T1", "T2"]
-
+evalReservation (SearchTrain dateTime) = pure ["T1", "T2"]
 evalReservation (GetTypology trainId) =
   if trainId == "T1"
     then pure $ MkTrainTypology "T1" [MkCoachTypology "A" 100 [5..100]]
     else pure $ MkTrainTypology "T2" [MkCoachTypology "A" 100 [5..100]]
-
 evalReservation (Reserve command) = pure $ Right command -- TODO: introduce errors
-
-evalReservation (Pure x) = ?evalReservation_rhs_4
-evalReservation (Bind x f) = ?evalReservation_rhs_5
+evalReservation (Pure val) = pure val
+evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
 
 
 --------------------------------------------------------------------------------
