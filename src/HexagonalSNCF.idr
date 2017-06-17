@@ -40,7 +40,7 @@ record Reservation where -- TODO: use phantom type for the confirmation
   constructor MkReservation
   trainId : TrainId
   coachId : CoachId
-  seatNbs : List Int
+  seatNbs : List SeatId
 
 Show Reservation where
   show r = "{" ++ show (trainId r) ++ ", "
@@ -116,7 +116,7 @@ Monoid OccupancyRatio where
 occupancyPercent : OccupancyRatio -> Double
 occupancyPercent r =
   if occupied r >= seatCount r
-    then 100.0
+    then 1.0
     else cast (occupied r) / cast (seatCount r)
 
 belowThreshold : Double -> OccupancyRatio -> Bool
@@ -125,6 +125,11 @@ belowThreshold threshold ratio = occupancyPercent ratio <= threshold
 addOccupied : Nat -> OccupancyRatio -> OccupancyRatio
 addOccupied seatRequest r = record { occupied $= (+ seatRequest) } r
 
+--------------------------------------------------------------------------------
+-- RULES:
+-- TODO: sum the total seats to check that will not go over 70% of the train
+-- TODO: check the typology of the coaches to put the same family in one coach
+-- TODO: ideally, we should not go over 70% in one coach
 --------------------------------------------------------------------------------
 
 TrainMaxOccupancy : Double
@@ -149,17 +154,17 @@ toCoachTypologies trains = concat (map trainTypologies trains)
   where
     trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
 
+coachToReservation : Nat -> (TrainId, CoachTypology) -> Reservation
+coachToReservation seatRequest (trainId, coach) =
+  MkReservation trainId (coachId coach) (take seatRequest (availableSeats coach))
+
 reservationsByDecreasingPreference : Nat -> List TrainTypology -> List Reservation
 reservationsByDecreasingPreference seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
       allCoaches = toCoachTypologies freeTrains
       bestCoaches = filter (belowThreshold CoachMaxOccupancy . addOccupied seatRequest . coachOccupancy . snd) allCoaches
-      nextCoaches = filter (belowThreshold 100.0 . addOccupied seatRequest . coachOccupancy . snd) allCoaches
-  in [] -- TODO
-
--- TODO: sum the total seats to check that will not go over 70% of the train
--- TODO: check the typology of the coaches to put the same family in one coach
--- TODO: ideally, we should not go over 70% in one coach
+      nextCoaches = filter (belowThreshold 1.0 . addOccupied seatRequest . coachOccupancy . snd) allCoaches
+  in map (coachToReservation seatRequest) (bestCoaches ++ nextCoaches) -- TODO: avoid duplicates (use sort)
 
 -- TODO: should be different errors (mapping is nice!)
 reserve : ReservationRequest -> ReservationExpr ReservationResult
@@ -172,7 +177,6 @@ reserve request = do
       r <- Reserve command
       -- TODO: handle errors (race conditions... ask for retry or abort)
       Pure r
-
 
 
 --------------------------------------------------------------------------------
