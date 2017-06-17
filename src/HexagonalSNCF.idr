@@ -98,13 +98,25 @@ evalReservation = ?hole
 record OccupancyRatio where
   constructor MkOccupancyRatio
   occupied : Nat
-  available : Nat
+  seatCount : Nat
 
 Semigroup OccupancyRatio where
-  (<+>) a b = MkOccupancyRatio (occupied a + occupied b) (available a + available b)
+  (<+>) a b = MkOccupancyRatio (occupied a + occupied b) (seatCount a + seatCount b)
 
 Monoid OccupancyRatio where
   neutral = MkOccupancyRatio 0 0
+
+occupancyPercent : OccupancyRatio -> Double
+occupancyPercent r =
+  if occupied r >= seatCount r
+    then 100.0
+    else cast (occupied r) / cast (seatCount r)
+
+belowThreshold : Double -> OccupancyRatio -> Bool
+belowThreshold threshold ratio = occupancyPercent ratio <= threshold
+
+addOccupied : Nat -> OccupancyRatio -> OccupancyRatio
+addOccupied seatRequest r = record { occupied $= (+ seatRequest) } r
 
 --------------------------------------------------------------------------------
 
@@ -132,14 +144,10 @@ toCoachTypologies trains = concat (map trainTypologies trains)
 
     -- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
 
-coachBelow70PercentOccupancy : Nat -> CoachTypology -> Bool
-coachBelow70PercentOccupancy seatRequest coach = ?isBelow70PercentOccupancy_rhs
-
-enoughSeats : Nat -> CoachTypology -> Bool
-enoughSeats seatRequest coach = ?enoughSeats
-
 bestTypology : Nat -> List TrainTypology -> ReservationCommand
-bestTypology seatRequest typologies = ?bestTypology
+bestTypology seatRequest trains =
+  let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
+  in ?bestTYpology
 
 -- TODO: sum the total seats to check that will not go over 70% of the train
 -- TODO: check the typology of the coaches to put the same family in one coach
