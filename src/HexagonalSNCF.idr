@@ -42,12 +42,13 @@ record Reservation where -- TODO: use phantom type for the confirmation
   coachId : CoachId
   seatNbs : List Int
 
-data ReservationError
-  = TechnicalError -- TODO: could be made such that the evaluator handles them
-  | CoachIsFull
+Show Reservation where
+  show r = "{" ++ show (trainId r) ++ ", "
+               ++ show (coachId r )++ ","
+               ++ show (seatNbs r) ++ "}"
 
 ReservationResult : Type
-ReservationResult = Either ReservationError Reservation
+ReservationResult = Maybe Reservation
 
 
 --------------------------------------------------------------------------------
@@ -84,7 +85,7 @@ evalReservation (GetTypology trainId) =
   if trainId == "T1"
     then pure $ MkTrainTypology "T1" [MkCoachTypology "A" 100 [5..100]]
     else pure $ MkTrainTypology "T2" [MkCoachTypology "A" 100 [5..100]]
-evalReservation (Reserve command) = pure $ Right command -- TODO: introduce errors
+evalReservation (Reserve command) = pure $ Just command -- TODO: introduce errors
 evalReservation (Pure val) = pure val
 evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
 
@@ -155,12 +156,13 @@ bestTypology seatRequest trains =
 -- TODO: check the typology of the coaches to put the same family in one coach
 -- TODO: ideally, we should not go over 70% in one coach
 
-reserve : ReservationRequest -> ReservationExpr ReservationResult -- TODO: should be different errors (mapping is nice!)
+-- TODO: should be different errors (mapping is nice!)
+reserve : ReservationRequest -> ReservationExpr ReservationResult
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
   case bestTypology (seatCount request) typologies of
-    Nothing       => Pure (Left CoachIsFull)
+    Nothing       => Pure Nothing -- TODO: better errors
     Just command  => do
       r <- Reserve command
       -- TODO: handle errors (race conditions... ask for retry or abort)
@@ -168,6 +170,16 @@ reserve request = do
 
 
 
+--------------------------------------------------------------------------------
+-- Run Tests
+--------------------------------------------------------------------------------
 
+run_tests : IO ()
+run_tests = do
+  let request = MkReservationRequest 10 10
+  result <- evalReservation (reserve request)
+  case result of
+    Nothing => putStrLn "Error"
+    Just ok => printLn ok
 
 --
