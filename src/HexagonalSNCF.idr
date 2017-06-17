@@ -176,13 +176,19 @@ coachToReservation : Nat -> (TrainId, CoachTypology) -> Reservation
 coachToReservation seatRequest (trainId, coach) =
   MkReservation trainId (coachId coach) (take seatRequest (availableSeats coach))
 
+projectedOccupancy : Nat -> CoachTypology -> OccupancyRatio -- TODO: memoize
+projectedOccupancy seatRequest = addOccupied seatRequest . coachOccupancy
+
+-- on : (b -> b -> c) -> (a -> b) -> (a -> a -> c) -- TODO: Utils to move somewhere else
+-- on f proj a b = f (proj a) (proj b)
+
 reservationsByDecreasingPreference : Nat -> List TrainTypology -> List Reservation
 reservationsByDecreasingPreference seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
       allCoaches = toCoachTypologies freeTrains
-      bestCoaches = filter (belowThreshold CoachMaxOccupancy . addOccupied seatRequest . coachOccupancy . snd) allCoaches
-      nextCoaches = filter (belowThreshold 1.0 . addOccupied seatRequest . coachOccupancy . snd) allCoaches
-  in map (coachToReservation seatRequest) (bestCoaches ++ nextCoaches) -- TODO: avoid duplicates (use sort)
+      validCoaches = filter (belowThreshold 1.0 . projectedOccupancy seatRequest . snd) allCoaches
+      (best, next) = partition (belowThreshold CoachMaxOccupancy . projectedOccupancy seatRequest . snd) validCoaches
+  in map (coachToReservation seatRequest) (best ++ next)
 
 reserve : ReservationRequest -> ReservationExpr ReservationResult
 reserve request = do
