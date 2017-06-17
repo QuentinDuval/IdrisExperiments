@@ -36,23 +36,18 @@ record TrainTypology where
   trainId : TrainId
   coaches : List CoachTypology
 
-record ReservationCommand where
-  constructor MkReservationCommand
+record Reservation where -- TODO: use phantom type for the confirmation
+  constructor MkReservation
   trainId : TrainId
   coachId : CoachId
+  seatNbs : List Int
 
 data ReservationError
   = TechnicalError -- TODO: could be made such that the evaluator handles them
   | CoachIsFull
 
-record ConfirmedReservation where
-  constructor MkConfirmedReservation
-  trainId : TrainId
-  coachId : CoachId
-  seatNbs : List Int
-
-Reservation : Type
-Reservation = Either ReservationError ConfirmedReservation
+ReservationResult : Type
+ReservationResult = Either ReservationError Reservation
 
 
 --------------------------------------------------------------------------------
@@ -63,7 +58,7 @@ data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
   SearchTrain : DateTime -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
-  Reserve : ReservationCommand -> ReservationExpr Reservation
+  Reserve : Reservation -> ReservationExpr ReservationResult
   Pure : ta -> ReservationExpr ta
   Bind : ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 
@@ -84,9 +79,17 @@ Applicative ReservationExpr where
 --------------------------------------------------------------------------------
 
 evalReservation : ReservationExpr ty -> IO ty
-evalReservation (SearchTrain x) = ?evalReservation_rhs_1
-evalReservation (GetTypology x) = ?evalReservation_rhs_2
-evalReservation (Reserve x) = ?evalReservation_rhs_3
+
+evalReservation (SearchTrain dateTime) =
+  pure ["T1", "T2"]
+
+evalReservation (GetTypology trainId) =
+  if trainId == "T1"
+    then pure $ MkTrainTypology "T1" [MkCoachTypology "A" 100 [5..100]]
+    else pure $ MkTrainTypology "T2" [MkCoachTypology "A" 100 [5..100]]
+
+evalReservation (Reserve command) = pure $ Right command -- TODO: introduce errors
+
 evalReservation (Pure x) = ?evalReservation_rhs_4
 evalReservation (Bind x f) = ?evalReservation_rhs_5
 
@@ -148,7 +151,7 @@ toCoachTypologies trains = concat (map trainTypologies trains)
 
 -- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
 
-bestTypology : Nat -> List TrainTypology -> Maybe ReservationCommand
+bestTypology : Nat -> List TrainTypology -> Maybe Reservation
 bestTypology seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
   in Nothing -- TODO
@@ -157,7 +160,7 @@ bestTypology seatRequest trains =
 -- TODO: check the typology of the coaches to put the same family in one coach
 -- TODO: ideally, we should not go over 70% in one coach
 
-reserve : ReservationRequest -> ReservationExpr Reservation -- TODO: should be different errors (mapping is nice!)
+reserve : ReservationRequest -> ReservationExpr ReservationResult -- TODO: should be different errors (mapping is nice!)
 reserve request = do
   trainIds <- SearchTrain (dateTime request)
   typologies <- sequence (map GetTypology trainIds)
