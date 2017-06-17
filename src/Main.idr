@@ -10,6 +10,7 @@ import HexagonalSNCF
 import InOut
 import Namespaces
 import Records
+import Reducers
 import Strings
 
 main : IO ()

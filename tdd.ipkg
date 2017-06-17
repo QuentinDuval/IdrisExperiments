@@ -14,6 +14,7 @@ modules =
   Main,
   Namespaces,
   Records,
+  Reducers,
   Strings
 
 executable = TDD
