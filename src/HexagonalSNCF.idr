@@ -70,10 +70,10 @@ data ReservationExpr : Type -> Type where
 (>>=): ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 (>>=) = Bind
 
-implementation Functor ReservationExpr where
+Functor ReservationExpr where
   map fn expr = expr >>= Pure . fn
 
-implementation Applicative ReservationExpr where
+Applicative ReservationExpr where
   pure = Pure
   fExpr <*> aExpr = fExpr >>= \f => map f aExpr
 
@@ -100,19 +100,30 @@ record OccupancyRatio where
   occupied : Nat
   available : Nat
 
+Semigroup OccupancyRatio where
+  (<+>) a b = MkOccupancyRatio (occupied a + occupied b) (available a + available b)
+
+Monoid OccupancyRatio where
+  neutral = MkOccupancyRatio 0 0
+
+--------------------------------------------------------------------------------
+
 TrainMaxOccupancy : Double
 TrainMaxOccupancy = 0.7
 
 CoachMaxOccupancy : Double
 CoachMaxOccupancy = 0.8
 
+coachOccupancy : CoachTypology -> OccupancyRatio
+coachOccupancy coach =
+  let totalSeats = totalSeatCount coach
+      takenSeats = length (availableSeats coach)
+  in case isLTE takenSeats totalSeats of
+        Yes prf => MkOccupancyRatio takenSeats totalSeats
+        No contra => MkOccupancyRatio totalSeats totalSeats
+
 trainOccupancy : TrainTypology -> OccupancyRatio
-trainOccupancy train = foldl runningAverage (MkOccupancyRatio 0 0) (coaches train)
-  where
-    runningAverage ratio coach =
-      let totalSeats = totalSeatCount coach
-          takenSeats = length (availableSeats coach)
-      in record { occupied $= (+ takenSeats) , available $= (+ totalSeats) } ratio
+trainOccupancy train = concatMap coachOccupancy (coaches train)
 
 toCoachTypologies : List TrainTypology -> List (TrainId, CoachTypology)
 toCoachTypologies trains = concat (map trainTypologies trains)
