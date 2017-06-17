@@ -63,7 +63,7 @@ data ReservationExpr : Type -> Type where
   -- TODO: add state... to force a workflow (and add abort + confirm + pay)
   SearchTrain : DateTime -> ReservationExpr (List TrainId)
   GetTypology : TrainId -> ReservationExpr TrainTypology
-  Reserve : Reservation -> ReservationExpr ReservationResult
+  Reserve : Reservation -> ReservationExpr (Maybe Reservation)
   Pure : ta -> ReservationExpr ta
   Bind : ReservationExpr ta -> (ta -> ReservationExpr tb) -> ReservationExpr tb
 
@@ -84,14 +84,18 @@ Applicative ReservationExpr where
 --------------------------------------------------------------------------------
 
 evalReservation : ReservationExpr ty -> IO ty
+evalReservation (Pure val) = pure val
+evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
 evalReservation (SearchTrain dateTime) = pure ["T1", "T2"]
-evalReservation (GetTypology trainId) =
+evalReservation (GetTypology trainId) = do
+  putStrLn ("GetTypology: " ++ trainId)
   if trainId == "T1"
     then pure $ MkTrainTypology "T1" [MkCoachTypology "A" 100 [5..100]]
     else pure $ MkTrainTypology "T2" [MkCoachTypology "A" 100 [5..100]]
-evalReservation (Reserve command) = pure $ Confirmed command -- TODO: introduce errors
-evalReservation (Pure val) = pure val
-evalReservation (Bind val next) = evalReservation val >>= evalReservation . next
+
+evalReservation (Reserve command) = do
+  putStrLn ("Reserve: " ++ show command)
+  pure $ Just command -- TODO: introduce errors
 
 
 --------------------------------------------------------------------------------
@@ -166,17 +170,18 @@ reservationsByDecreasingPreference seatRequest trains =
       nextCoaches = filter (belowThreshold 1.0 . addOccupied seatRequest . coachOccupancy . snd) allCoaches
   in map (coachToReservation seatRequest) (bestCoaches ++ nextCoaches) -- TODO: avoid duplicates (use sort)
 
--- TODO: should be different errors (mapping is nice!)
 reserve : ReservationRequest -> ReservationExpr ReservationResult
 reserve request = do
-  trainIds <- SearchTrain (dateTime request)
-  typologies <- sequence (map GetTypology trainIds)
-  case reservationsByDecreasingPreference (seatCount request) typologies of
-    [] => Pure NoTrainAvailable
-    (command :: _)  => do
-      r <- Reserve command
-      -- TODO: handle errors (race conditions... ask for retry or abort)
-      Pure r
+    trainIds <- SearchTrain (dateTime request)
+    typologies <- sequence (map GetTypology trainIds)
+    confirmByPref $ reservationsByDecreasingPreference (seatCount request) typologies
+  where
+    confirmByPref [] = Pure NoTrainAvailable
+    confirmByPref (r::rs) = do
+      validated <- Reserve r
+      case validated of
+        Nothing => confirmByPref rs
+        Just ok => Pure (Confirmed ok)
 
 
 --------------------------------------------------------------------------------
