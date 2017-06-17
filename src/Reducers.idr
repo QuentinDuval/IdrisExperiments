@@ -32,6 +32,9 @@ mapping fn step = \acc, outer => step acc (fn outer)
 filtering : (elem -> Bool) -> ReducerL acc elem elem
 filtering pf step = \acc, elem => if pf elem then step acc elem else acc
 
+catMapping : (Foldable t) => (outer -> t inner) -> ReducerL acc inner outer
+catMapping fn step = \acc, outer => let inners = fn outer in foldl step acc inners
+
 
 --------------------------------------------------------------------------------
 -- Some tests
