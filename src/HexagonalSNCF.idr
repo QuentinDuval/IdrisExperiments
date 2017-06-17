@@ -14,6 +14,9 @@ TrainId = String
 CoachId : Type
 CoachId = String
 
+SeatId : Type
+SeatId = Int
+
 DateTime : Type
 DateTime = Int
 
@@ -25,7 +28,8 @@ record ReservationRequest where
 record CoachTypology where
   constructor MkCoachTypology
   coachId : CoachId
-  availableSeats : List Int
+  totalSeatCount : Nat
+  availableSeats : List SeatId
 
 record TrainTypology where
   constructor MkTrainTypology
@@ -91,15 +95,40 @@ evalReservation = ?hole
 -- * Current implementation that satisfies the rules is exression of the DSL
 --------------------------------------------------------------------------------
 
+record OccupancyRatio where
+  constructor MkOccupancyRatio
+  occupied : Nat
+  available : Nat
+
+TrainMaxOccupancy : Double
+TrainMaxOccupancy = 0.7
+
+CoachMaxOccupancy : Double
+CoachMaxOccupancy = 0.8
+
+trainOccupancy : TrainTypology -> OccupancyRatio
+trainOccupancy train = foldl runningAverage (MkOccupancyRatio 0 0) (coaches train)
+  where
+    runningAverage ratio coach =
+      let totalSeats = totalSeatCount coach
+          takenSeats = length (availableSeats coach)
+      in record { occupied $= (+ takenSeats) , available $= (+ totalSeats) } ratio
+
 toCoachTypologies : List TrainTypology -> List (TrainId, CoachTypology)
 toCoachTypologies trains = concat (map trainTypologies trains)
   where
     trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
 
--- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that
+    -- TODO: two loops, one to search for the best match (70% less occupancy), second ignores that (or sort...)
+
+coachBelow70PercentOccupancy : Nat -> CoachTypology -> Bool
+coachBelow70PercentOccupancy seatRequest coach = ?isBelow70PercentOccupancy_rhs
+
+enoughSeats : Nat -> CoachTypology -> Bool
+enoughSeats seatRequest coach = ?enoughSeats
 
 bestTypology : Nat -> List TrainTypology -> ReservationCommand
-bestTypology seatCount typologies = ?bestTypology
+bestTypology seatRequest typologies = ?bestTypology
 
 -- TODO: sum the total seats to check that will not go over 70% of the train
 -- TODO: check the typology of the coaches to put the same family in one coach
