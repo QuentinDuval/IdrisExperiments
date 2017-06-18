@@ -1,8 +1,8 @@
 module HexagonalSNCF
 
+import Reducers
 
 -- https://github.com/emilybache/KataTrainReservation
-
 
 --------------------------------------------------------------------------------
 -- Domain types
@@ -167,10 +167,8 @@ coachOccupancy coach =
 trainOccupancy : TrainTypology -> OccupancyRatio
 trainOccupancy train = concatMap coachOccupancy (coaches train)
 
-toCoachTypologies : List TrainTypology -> List (TrainId, CoachTypology)
-toCoachTypologies trains = concat (map trainTypologies trains)
-  where
-    trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
+trainTypologies : TrainTypology -> List (TrainId, CoachTypology)
+trainTypologies train = map (\coach => (trainId train, coach)) (coaches train)
 
 coachToReservation : Nat -> (TrainId, CoachTypology) -> Reservation
 coachToReservation seatRequest (trainId, coach) =
@@ -179,13 +177,10 @@ coachToReservation seatRequest (trainId, coach) =
 projectedOccupancy : Nat -> CoachTypology -> OccupancyRatio -- TODO: memoize
 projectedOccupancy seatRequest = addOccupied seatRequest . coachOccupancy
 
--- on : (b -> b -> c) -> (a -> b) -> (a -> a -> c) -- TODO: Utils to move somewhere else
--- on f proj a b = f (proj a) (proj b)
-
 reservationsByDecreasingPreference : Nat -> List TrainTypology -> List Reservation
 reservationsByDecreasingPreference seatRequest trains =
   let freeTrains = filter (belowThreshold TrainMaxOccupancy . addOccupied seatRequest . trainOccupancy) trains
-      allCoaches = toCoachTypologies freeTrains
+      allCoaches = concatMap trainTypologies freeTrains
       validCoaches = filter (belowThreshold 1.0 . projectedOccupancy seatRequest . snd) allCoaches
       (best, next) = partition (belowThreshold CoachMaxOccupancy . projectedOccupancy seatRequest . snd) validCoaches
   in map (coachToReservation seatRequest) (best ++ next)

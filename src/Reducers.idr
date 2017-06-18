@@ -5,6 +5,9 @@ module Reducers
 -- Core library
 --------------------------------------------------------------------------------
 
+-- on : (b -> b -> c) -> (a -> b) -> (a -> a -> c) -- TODO: Utils to move somewhere else
+-- on f proj a b = f (proj a) (proj b)
+
 StepL : (acc: Type) -> (elem: Type) -> Type
 StepL acc elem = acc -> elem -> acc
 
