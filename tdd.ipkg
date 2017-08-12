@@ -12,6 +12,7 @@ modules =
   HexagonalSNCF,
   InOut,
   Main,
+  Money,
   Namespaces,
   Records,
   Reducers,

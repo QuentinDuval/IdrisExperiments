@@ -8,6 +8,7 @@ import DoNotation
 import Fibonacci
 import HexagonalSNCF
 import InOut
+import Money
 import Namespaces
 import Records
 import Reducers
