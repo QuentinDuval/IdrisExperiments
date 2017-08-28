@@ -36,6 +36,25 @@ logEvent e = logFmt (schema e) (code e ++ ": ")
     logFmt (SString :: rest) out = \s => logFmt rest (out ++ s)
     logFmt (SLiteral s :: rest) out = logFmt rest (out ++ s)
 
+parseSchema : List Char -> Maybe Schema
+parseSchema [] = pure []
+parseSchema ('{' :: s) = do
+  let (xs, ys) = break (== '}') s
+  case nonEmpty ys of
+    No _ => Nothing
+    Yes _ => do
+      schema <- parseSchema (tail ys)
+      if xs == unpack "int"
+        then pure $ SInt :: schema
+      else if xs == unpack "string"
+        then pure $ SString :: schema
+      else Nothing
+parseSchema s = do
+  let (a, b) = break (== '{') s
+  schema <- parseSchema b
+  pure $ SLiteral (pack a) :: schema
+
+
 birthDay : LogEvent
 birthDay = MkLogEvent "Happy BirthDay" [SInt, SLiteral " years old, ", SString]
 
