@@ -19,7 +19,13 @@ record LogEvent where
   schema : Schema
 
 describe : LogEvent -> String
-describe = ?hole
+describe e = loop (schema e) (code e ++ ":")
+  where
+    loop : (schema: Schema) -> String -> String
+    loop [] out = out
+    loop (SInt :: xs) out = loop xs (out ++ " {int}")
+    loop (SString :: xs) out = loop xs (out ++ " {string}")
+    loop (SLiteral s :: xs) out = loop xs (out ++ " " ++ s)
 
 logFmt : (schema: Schema) -> String -> SchemaType schema
 logFmt [] out = out
@@ -30,9 +36,11 @@ logFmt (SLiteral s :: rest) out = logFmt rest (out ++ " " ++ s)
 logEvent : (event: LogEvent) -> SchemaType (schema event)
 logEvent e = logFmt (schema e) (code e ++ ":")
 
-test_log : String
+test_log : List String
 test_log =
   let s = [SInt, SLiteral "is the age of", SString]
-  in logEvent (MkLogEvent "BIRTHDAY" s) 32 "Quentin"
+  in [ describe (MkLogEvent "BIRTHDAY" s)
+     , logEvent (MkLogEvent "BIRTHDAY" s) 32 "Quentin"
+     ]
 
 --
