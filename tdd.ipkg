@@ -11,6 +11,7 @@ modules =
   Fibonacci,
   HexagonalSNCF,
   InOut,
+  Logging,
   Main,
   Money,
   Namespaces,
