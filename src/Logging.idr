@@ -27,14 +27,14 @@ describe e = loop (schema e) (code e ++ ":")
     loop (SString :: xs) out = loop xs (out ++ " {string}")
     loop (SLiteral s :: xs) out = loop xs (out ++ " " ++ s)
 
-logFmt : (schema: Schema) -> String -> SchemaType schema
-logFmt [] out = out
-logFmt (SInt :: rest) out = \i => logFmt rest (out ++ " " ++ show i)
-logFmt (SString :: rest) out = \s => logFmt rest (out ++ " " ++ s)
-logFmt (SLiteral s :: rest) out = logFmt rest (out ++ " " ++ s)
-
 logEvent : (event: LogEvent) -> SchemaType (schema event)
 logEvent e = logFmt (schema e) (code e ++ ":")
+  where
+    logFmt : (schema: Schema) -> String -> SchemaType schema
+    logFmt [] out = out
+    logFmt (SInt :: rest) out = \i => logFmt rest (out ++ " " ++ show i)
+    logFmt (SString :: rest) out = \s => logFmt rest (out ++ " " ++ s)
+    logFmt (SLiteral s :: rest) out = logFmt rest (out ++ " " ++ s)
 
 test_log : List String
 test_log =
