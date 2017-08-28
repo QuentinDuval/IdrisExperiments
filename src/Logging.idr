@@ -48,7 +48,7 @@ newYearEve = MkLogEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
 
 test_log : List String
 test_log =
-  [describe e | e <- [birthDay, newYearEve]]
+  map describe [birthDay, newYearEve]
   ++
   [ logEvent birthDay 32 "Quentin"
   , logEvent newYearEve 2017 ]
