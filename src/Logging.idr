@@ -38,9 +38,7 @@ logEvent e = logFmt (schema e) (code e ++ ":")
 
 test_log : List String
 test_log =
-  let s = [SInt, SLiteral "is the age of", SString]
-  in [ describe (MkLogEvent "BIRTHDAY" s)
-     , logEvent (MkLogEvent "BIRTHDAY" s) 32 "Quentin"
-     ]
+  let e = MkLogEvent "BIRTHDAY" [SInt, SLiteral "is the age of", SString]
+  in [describe e, logEvent e 32 "Quentin"]
 
 --
