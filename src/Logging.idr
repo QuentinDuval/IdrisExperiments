@@ -28,48 +28,54 @@ describe e = loop (schema e) (code e ++ ": ")
     loop (SLiteral s :: xs) out = loop xs (out ++ s)
 
 logEvent : (event: LogEvent) -> SchemaType (schema event)
-logEvent e = logFmt (schema e) (code e ++ ": ")
+logEvent e = loop (schema e) (code e ++ ": ")
   where
-    logFmt : (schema: Schema) -> String -> SchemaType schema
-    logFmt [] out = out
-    logFmt (SInt :: rest) out = \i => logFmt rest (out ++ show i)
-    logFmt (SString :: rest) out = \s => logFmt rest (out ++ s)
-    logFmt (SLiteral s :: rest) out = logFmt rest (out ++ s)
+    loop : (schema: Schema) -> String -> SchemaType schema
+    loop [] out = out
+    loop (SInt :: rest) out = \i => loop rest (out ++ show i)
+    loop (SString :: rest) out = \s => loop rest (out ++ s)
+    loop (SLiteral s :: rest) out = loop rest (out ++ s)
 
-parseSchema : List Char -> Maybe Schema
-parseSchema [] = pure []
-parseSchema ('{' :: s) = do
+parseSchema' : List Char -> Maybe Schema
+parseSchema' [] = pure []
+parseSchema' ('{' :: s) = do
   let (xs, ys) = break (== '}') s
   case nonEmpty ys of
     No _ => Nothing
     Yes _ => do
-      schema <- parseSchema (tail ys)
+      schema <- parseSchema' (tail ys)
       if xs == unpack "int"
         then pure $ SInt :: schema
-      else if xs == unpack "string"
-        then pure $ SString :: schema
-      else Nothing
-parseSchema s = do
+        else if xs == unpack "string"
+          then pure $ SString :: schema
+          else Nothing
+parseSchema' s = do
   let (a, b) = break (== '{') s
-  schema <- parseSchema b
+  schema <- parseSchema' b
   pure $ SLiteral (pack a) :: schema
 
+parseSchema : String -> Maybe Schema
+parseSchema s = parseSchema' (unpack s)
+
+--
+-- Tests
+--
 
 birthDay : LogEvent
 birthDay = MkLogEvent "Happy BirthDay" [SInt, SLiteral " years old, ", SString]
 
 newYearEve : LogEvent
-newYearEve = MkLogEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
-
---
--- Tests
---
+newYearEve =
+  -- let Just schema = ParseSchema "Happy new year {int}"
+  -- in MkLogEvent "New Year's Eve:" schema
+  MkLogEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
 
 test_log : List String
 test_log =
   map describe [birthDay, newYearEve]
   ++
   [ logEvent birthDay 32 "Quentin"
-  , logEvent newYearEve 2017 ]
+  , logEvent newYearEve 2017
+  ]
 
 --
