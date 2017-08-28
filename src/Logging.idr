@@ -36,25 +36,24 @@ logEvent e = loop (schema e) (title e ++ ": ")
     loop (SString :: rest) out = \s => loop rest (out ++ s)
     loop (SLiteral s :: rest) out = loop rest (out ++ s)
 
-parseSchema' : List Char -> Maybe Schema
-parseSchema' [] = pure []
-parseSchema' ('{' :: s) = do
-  let (xs, ys) = break (== '}') s
-  case nonEmpty ys of
-    No _ => Nothing
-    Yes _ => do
-      schema <- parseSchema' (tail ys)
-      if xs == unpack "int"
-        then pure $ SInt :: schema
-        else if xs == unpack "string"
-          then pure $ SString :: schema
-          else Nothing
-parseSchema' s = do
-  let (a, b) = break (== '{') s
-  schema <- parseSchema' b
-  pure $ SLiteral (pack a) :: schema
+parseSchema' : List Char -> Schema
+parseSchema' [] = []
+parseSchema' ('{' :: 'i' :: 'n' :: 't' :: '}' :: s) = SInt :: parseSchema' s
+parseSchema' ('{' :: 's' :: 't' :: 'r' :: 'i' :: 'n' :: 'g' :: '}' :: s) = SString :: parseSchema' s
 
-parseSchema : String -> Maybe Schema
+{-
+parseSchema' s =
+  let (a, b) = span (/= '{') s
+  in SLiteral (pack a) :: parseSchema' b
+-}
+
+-- TODO: this works, with the break, it fails, maybe due to Delay (:printdef)
+parseSchema' (x :: s) =
+  case parseSchema' s of
+    SLiteral str :: rest => SLiteral (strCons x str) :: rest
+    rest => SLiteral (strCons x "") :: rest
+
+parseSchema : String -> Schema
 parseSchema s = parseSchema' (unpack s)
 
 --
@@ -66,9 +65,8 @@ birthDay = MkEvent "Happy BirthDay" [SInt, SLiteral " years old, ", SString]
 
 newYearEve : Event
 newYearEve =
-  -- let Just schema = parseSchema "Happy new year {int}"
-  -- in MkLogEvent "New Year's Eve:" schema
-  MkEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
+  MkEvent "New Year's Eve:" (parseSchema "Happy new year {int}")
+  -- MkEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
 
 allEvents : List Event
 allEvents = [birthDay, newYearEve]
