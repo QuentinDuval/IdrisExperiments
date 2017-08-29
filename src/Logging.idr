@@ -1,17 +1,16 @@
 module Logging
 
--- infixr 5 .+.
 
-data SchemaElem = SInt | SString | SLiteral String
+data SchemaElem = IntVar | StrVar | StrCst String
 
 Schema : Type
 Schema = List SchemaElem
 
 SchemaType : Schema -> Type
 SchemaType [] = String
-SchemaType (SInt :: rest) = Int -> SchemaType rest
-SchemaType (SString :: rest) = String -> SchemaType rest
-SchemaType (_ :: rest) = SchemaType rest
+SchemaType (IntVar :: xs) = Int -> SchemaType xs
+SchemaType (StrVar :: xs) = String -> SchemaType xs
+SchemaType (_ :: xs) = SchemaType xs
 
 record Event where
   constructor MkEvent
@@ -21,50 +20,60 @@ record Event where
 describe : Event -> String
 describe e = concatMap describeElem (schema e)
   where
-    describeElem SInt = "{int}"
-    describeElem SString = "{string}"
-    describeElem (SLiteral s) = s
+    describeElem IntVar = "{int}"
+    describeElem StrVar = "{string}"
+    describeElem (StrCst s) = s
 
 logEvent : (event: Event) -> SchemaType (schema event)
 logEvent e = loop (schema e) (title e ++ ": ")
   where
     loop : (schema: Schema) -> String -> SchemaType schema
     loop [] out = out
-    loop (SInt :: rest) out = \i => loop rest (out ++ show i)
-    loop (SString :: rest) out = \s => loop rest (out ++ s)
-    loop (SLiteral s :: rest) out = loop rest (out ++ s)
+    loop (IntVar :: rest) out = \i => loop rest (out ++ show i)
+    loop (StrVar :: rest) out = \s => loop rest (out ++ s)
+    loop (StrCst s :: rest) out = loop rest (out ++ s)
 
 parseSchema' : List Char -> Schema
 parseSchema' [] = []
-parseSchema' ('{' :: 'i' :: 'n' :: 't' :: '}' :: s) = SInt :: parseSchema' s
-parseSchema' ('{' :: 's' :: 't' :: 'r' :: 'i' :: 'n' :: 'g' :: '}' :: s) = SString :: parseSchema' s
-
-{-
-parseSchema' s =
-  let (a, b) = span (/= '{') s
-  in SLiteral (pack a) :: parseSchema' b
--}
-
--- TODO: this works, with the break, it fails, maybe due to Delay (:printdef)
+parseSchema' ('{' :: 'i' :: 'n' :: 't' :: '}' :: s) = IntVar :: parseSchema' s
+parseSchema' ('{' :: 's' :: 't' :: 'r' :: 'i' :: 'n' :: 'g' :: '}' :: s) = StrVar :: parseSchema' s
 parseSchema' (x :: s) =
   case parseSchema' s of
-    SLiteral str :: rest => SLiteral (strCons x str) :: rest
-    rest => SLiteral (strCons x "") :: rest
+    StrCst str :: rest => StrCst (strCons x str) :: rest
+    rest => StrCst (strCons x "") :: rest
 
 parseSchema : String -> Schema
 parseSchema s = parseSchema' (unpack s)
+
+--
+-- Approach without type safety for logEvent
+--
+
+data SchemaValue = IntVal Int | StrVal String
+
+logEvent' : Event -> List SchemaValue -> Maybe String
+logEvent' e vals = loop (schema e) vals (title e ++ ": ")
+  where
+    loop : Schema -> List SchemaValue -> String -> Maybe String
+    loop [] [] out = pure out
+    loop (IntVar :: xs) (IntVal i :: ys) out = loop xs ys (out ++ show i)
+    loop (StrVar :: xs) (StrVal s :: ys) out = loop xs ys (out ++ s)
+    loop (StrCst x :: xs) ys out = loop xs ys (out ++ x)
+    loop _ _ _ = Nothing
+
+
+-- TODO: one with a vector of the right size! at compile time
 
 --
 -- Tests
 --
 
 birthDay : Event
-birthDay = MkEvent "Happy BirthDay" [SInt, SLiteral " years old, ", SString]
+birthDay = MkEvent "Happy BirthDay" [IntVar, StrCst " years old, ", StrVar]
 
 newYearEve : Event
-newYearEve =
-  MkEvent "New Year's Eve:" (parseSchema "Happy new year {int}")
-  -- MkEvent "New Year's Eve:" [SLiteral "Happy new year ", SInt]
+newYearEve = MkEvent "New Year's Eve:" (parseSchema "Happy new year {int}")
+          -- MkEvent "New Year's Eve:" [StrCst "Happy new year ", IntVar]
 
 allEvents : List Event
 allEvents = [birthDay, newYearEve]
@@ -75,6 +84,12 @@ test_log =
   ++
   [ logEvent birthDay 32 "Quentin"
   , logEvent newYearEve 2017
+  ]
+  ++
+  mapMaybe id
+  [ logEvent' birthDay [IntVal 32, StrVal "Quentin"]
+  , logEvent' birthDay [StrVal "Quentin", IntVal 32]
+  , logEvent' birthDay [StrVal "Quentin"]
   ]
 
 --
