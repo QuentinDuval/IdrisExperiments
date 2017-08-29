@@ -19,13 +19,11 @@ record Event where
   schema : Schema
 
 describe : Event -> String
-describe e = loop (schema e) (title e ++ ": ")
+describe e = concatMap describeElem (schema e)
   where
-    loop : (schema: Schema) -> String -> String
-    loop [] out = out
-    loop (SInt :: xs) out = loop xs (out ++ "{int}")
-    loop (SString :: xs) out = loop xs (out ++ "{string}")
-    loop (SLiteral s :: xs) out = loop xs (out ++ s)
+    describeElem SInt = "{int}"
+    describeElem SString = "{string}"
+    describeElem (SLiteral s) = s
 
 logEvent : (event: Event) -> SchemaType (schema event)
 logEvent e = loop (schema e) (title e ++ ": ")
