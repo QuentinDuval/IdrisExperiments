@@ -17,12 +17,12 @@ record Event where
   title : String
   schema : Schema
 
-describe : Event -> String
-describe e = concatMap describeElem (schema e)
-  where
-    describeElem IntVar = "{int}"
-    describeElem StrVar = "{string}"
-    describeElem (StrCst s) = s
+Show Event where
+  show e = title e ++ ": " ++ concatMap describeElem (schema e)
+    where
+      describeElem IntVar = "{int}"
+      describeElem StrVar = "{string}"
+      describeElem (StrCst s) = s
 
 logEvent : (event: Event) -> SchemaType (schema event)
 logEvent e = loop (schema e) (title e ++ ": ")
@@ -80,7 +80,7 @@ allEvents = [birthDay, newYearEve]
 
 test_log : List String
 test_log =
-  map describe allEvents
+  map show allEvents
   ++
   [ logEvent birthDay 32 "Quentin"
   , logEvent newYearEve 2017
