@@ -72,7 +72,7 @@ birthDay : Event
 birthDay = MkEvent "Happy BirthDay" [IntVar, StrCst " years old, ", StrVar]
 
 newYearEve : Event
-newYearEve = MkEvent "New Year's Eve:" (parseSchema "Happy new year {int}")
+newYearEve = MkEvent "New Year's Eve" (parseSchema "Happy new year {int}")
           -- MkEvent "New Year's Eve:" [StrCst "Happy new year ", IntVar]
 
 allEvents : List Event
