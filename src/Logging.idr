@@ -15,46 +15,47 @@ SchemaType (_ :: xs) = SchemaType xs
 record Event where
   constructor MkEvent
   title : String
-  schema : Schema
+  messageSpec : Schema
+
+Show SchemaElem where
+  show IntVar = "{int}"
+  show StrVar = "{string}"
+  show (StrCst s) = s
 
 Show Event where
-  show e = title e ++ ": " ++ concatMap describeElem (schema e)
-    where
-      describeElem IntVar = "{int}"
-      describeElem StrVar = "{string}"
-      describeElem (StrCst s) = s
+  show e = title e ++ ": " ++ concatMap show (messageSpec e)
 
-logEvent : (event: Event) -> SchemaType (schema event)
-logEvent e = loop (schema e) (title e ++ ": ")
+logEvent : (event: Event) -> SchemaType (messageSpec event)
+logEvent e = loop (messageSpec e) (title e ++ ": ")
   where
-    loop : (schema: Schema) -> String -> SchemaType schema
+    loop : (messageSpec: Schema) -> String -> SchemaType messageSpec
     loop [] out = out
     loop (IntVar :: rest) out = \i => loop rest (out ++ show i)
     loop (StrVar :: rest) out = \s => loop rest (out ++ s)
     loop (StrCst s :: rest) out = loop rest (out ++ s)
 
-parseSchema' : List Char -> Schema
-parseSchema' [] = []
-parseSchema' ('{' :: 'i' :: 'n' :: 't' :: '}' :: s) = IntVar :: parseSchema' s
-parseSchema' ('{' :: 's' :: 't' :: 'r' :: 'i' :: 'n' :: 'g' :: '}' :: s) = StrVar :: parseSchema' s
-parseSchema' (x :: s) =
-  case parseSchema' s of
+parseMessageSpec' : List Char -> Schema
+parseMessageSpec' [] = []
+parseMessageSpec' ('{' :: 'i' :: 'n' :: 't' :: '}' :: s) = IntVar :: parseMessageSpec' s
+parseMessageSpec' ('{' :: 's' :: 't' :: 'r' :: 'i' :: 'n' :: 'g' :: '}' :: s) = StrVar :: parseMessageSpec' s
+parseMessageSpec' (x :: s) =
+  case parseMessageSpec' s of
     StrCst str :: rest => StrCst (strCons x str) :: rest
     rest => StrCst (strCons x "") :: rest
 
-parseSchema : String -> Schema
-parseSchema s = parseSchema' (unpack s)
+parseMessageSpec : String -> Schema
+parseMessageSpec s = parseMessageSpec' (unpack s)
 
 --
 -- Approach without type safety for logEvent
 --
 
-data SchemaValue = IntVal Int | StrVal String
+data PlaceholderValue = IntVal Int | StrVal String
 
-logEvent' : Event -> List SchemaValue -> Maybe String
-logEvent' e vals = loop (schema e) vals (title e ++ ": ")
+logEvent' : Event -> List PlaceholderValue -> Maybe String
+logEvent' e vals = loop (messageSpec e) vals (title e ++ ": ")
   where
-    loop : Schema -> List SchemaValue -> String -> Maybe String
+    loop : Schema -> List PlaceholderValue -> String -> Maybe String
     loop [] [] out = pure out
     loop (IntVar :: xs) (IntVal i :: ys) out = loop xs ys (out ++ show i)
     loop (StrVar :: xs) (StrVal s :: ys) out = loop xs ys (out ++ s)
@@ -72,7 +73,7 @@ birthDay : Event
 birthDay = MkEvent "Happy BirthDay" [IntVar, StrCst " years old, ", StrVar]
 
 newYearEve : Event
-newYearEve = MkEvent "New Year's Eve" (parseSchema "Happy new year {int}")
+newYearEve = MkEvent "New Year's Eve" (parseMessageSpec "Happy new year {int}")
           -- MkEvent "New Year's Eve:" [StrCst "Happy new year ", IntVar]
 
 allEvents : List Event
