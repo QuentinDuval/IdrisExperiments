@@ -9,6 +9,7 @@ modules =
   Chapter3,
   DoNotation,
   Fibonacci,
+  FreeMonad,
   HexagonalSNCF,
   InOut,
   Logging,
