@@ -45,25 +45,26 @@ interpret (Pure a) = pure a
 interpret (ReadLine cont) = getLine >>= interpret . cont
 interpret (WriteLine s next) = putStrLn s *> interpret next
 
--- TODO: Try the game of login (3 attempts max)
+--
 
-password : String -> IOSpec Bool
-password secret = recur 1 where
-  recur 4 = pure False
+password : Nat -> (String -> Bool) -> IOSpec Bool
+password maxAttempt valid = recur (S Z) where
   recur n = do
     prnLine "Password:"
     attempt <- readLine
-    if secret == attempt
+    if valid attempt
       then do
         prnLine ("Successful login after " ++ show n ++ " attempt(s).")
         pure True
       else do
         prnLine ("Login failed: " ++ show n ++ " attempt(s).")
-        recur (n + 1)
+        if n < maxAttempt
+          then recur (n + 1)
+          else pure False
 
 prog : IOSpec ()
 prog = do
-  granted <- password "Kenobi"
+  granted <- password 3 (== "Kenobi")
   if granted then prnLine "Real program"
              else prnLine "Shutting down"
 
