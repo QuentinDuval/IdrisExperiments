@@ -47,6 +47,23 @@ interpret (WriteLine s next) = putStrLn s *> interpret next
 
 --
 
+password' : Nat -> (String -> Bool) -> IO Bool
+password' maxAttempt valid = recur (S Z) where
+  recur n = do
+    putStrLn "Password:"
+    attempt <- getLine
+    if valid attempt
+      then do
+        putStrLn ("Successful login after " ++ show n ++ " attempt(s).")
+        pure True
+      else do
+        putStrLn ("Login failed: " ++ show n ++ " attempt(s).")
+        if n < maxAttempt
+          then recur (n + 1)
+          else pure False
+
+-- Abstracted
+
 password : Nat -> (String -> Bool) -> IOSpec Bool
 password maxAttempt valid = recur (S Z) where
   recur n = do

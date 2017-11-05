@@ -10,6 +10,7 @@ modules =
   DoNotation,
   Fibonacci,
   FreeMonad,
+  FreeMonad2,
   HexagonalSNCF,
   InOut,
   Logging,
