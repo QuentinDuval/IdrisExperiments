@@ -72,17 +72,6 @@ data TestBot = MkTestBot (List TestBotAction)
 (.|) (MkTestBot actions) prog = pull actions prog where
   mutual
 
-    -- To work: needs to return the list of Bot actions... the Bind is shitty
-    {-
-    pull : List TestBotAction -> IOSpec r -> (List TestBotAction, IOSpec r)
-    pull [] ReadLine = ([], ReadLine)
-    pull (Thinking x::xs) ReadLine = prnLine x *> pull xs ReadLine
-    pull (Typing x::xs) ReadLine = pull xs (pure x)
-    pull actions (Bind curr next) = Bind curr (pull actions . next)
-    pull actions x = x
-    -}
-
-    -- Missing Bind of Bind... this is awful...
     pull : List TestBotAction -> IOSpec r -> IOSpec r
     pull p1 (Bind (WriteLine s) next)   = Bind (WriteLine s) (pull p1 . next)
     pull p1 (Bind ReadLine next)        = push p1 next
