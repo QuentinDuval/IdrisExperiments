@@ -87,10 +87,8 @@ data TestBot = MkTestBot (List TestBotAction)
     pull p1 (Bind (WriteLine s) next)   = Bind (WriteLine s) (pull p1 . next)
     pull p1 (Bind ReadLine next)        = push p1 next
     pull p1 (Bind (Pure x) next)        = pull p1 (next x)
-    pull p1 (Bind act next)             = ?hole_what_to_do -- push should return the rest of p1?
-    pull p1 WriteLine                   = WriteLine
-    pull p1 ReadLine                    = ReadLine
-    pull p1 (Pure x)                    = Pure x
+    pull p1 (Bind (Bind x next1) next2) = pull p1 (Bind x (\x => Bind (next1 x) next2))
+    pull p1 x                           = x
 
     push : List TestBotAction -> (String -> IOSpec r)-> IOSpec r
     push [] cont                = Bind ReadLine cont
