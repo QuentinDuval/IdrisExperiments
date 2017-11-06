@@ -42,8 +42,12 @@ prnLine s = WriteLine s (Pure ())
 
 interpret : IOSpec r -> IO r
 interpret (Pure a) = pure a
-interpret (ReadLine cont) = getLine >>= interpret . cont
-interpret (WriteLine s next) = putStrLn s *> interpret next
+interpret (ReadLine cont) = do
+  l <- getLine
+  interpret (cont l)
+interpret (WriteLine s next) = do
+  putStrLn s
+  interpret next
 
 --
 
