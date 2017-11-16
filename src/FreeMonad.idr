@@ -101,24 +101,35 @@ data TestBot = MkTestBot (List TestBotAction)
 
 (.|) : TestBot -> IOSpec r -> IOSpec r
 (.|) (MkTestBot actions) prog = pull actions prog where
-  mutual
+  mutual -- To define mutually recursive functions
 
     pull : List TestBotAction -> IOSpec r -> IOSpec r
-    pull p1 (Pure r)            = Pure r
-    pull p1 (WriteLine s next)  = WriteLine s (pull p1 next)
-    pull p1 (ReadLine cont)     = push p1 cont
+    pull actions (Pure r) = Pure r
+    pull actions (WriteLine s next) = do
+      prnLine s          -- Print the line to display (such as "Password:")
+      pull actions next  -- Keep on traversing the IOSpec computation
+    pull actions (ReadLine cont) =
+      push actions cont -- Give control to bot actions
 
     push : List TestBotAction -> (String -> IOSpec r )-> IOSpec r
-    push [] cont                = (ReadLine cont)
-    push (Typing x::xs) cont    = pull xs (prnLine x *> cont x)
-    push (Thinking x::xs) cont  = prnLine x *> push xs cont
+    push [] cont = ReadLine cont
+    push (Typing x::xs) cont = do
+      prnLine x         -- Display the value typed by the bot
+      pull xs (cont x)  -- Send `x` to the main program, and give it control back
+    push (Thinking x::xs) cont = do
+      prnLine x         -- Print the thoughts of our bot
+      readLine          -- Wait for a line (notification to continue)
+      push xs cont      -- Keep going
 
 -- Tests
 
 fake : TestBot
-fake = MkTestBot [Typing "Obiwan", Thinking "Search again...", Typing "Kenobi", Thinking "Ok I am done..."]
+fake = MkTestBot [ Typing "Spock"
+                 , Thinking "Search again..."
+                 , Typing "Scotty"
+                 , Thinking "Ok I am done..."]
 
-run_test : IO ()
-run_test = interpret (fake .| prog)
+run_test : IO Bool
+run_test = interpret (fake .| password 3 (== "Scotty"))
 
 --
