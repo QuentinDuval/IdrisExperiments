@@ -7,6 +7,36 @@ record Matrix a where
   constructor MakeMatrix
   values : Vect width (Vect height a)
 
+MatrixWidth : Matrix a -> Nat
+MatrixWidth (MakeMatrix {width} v) = width
+
+MatrixHeight : Matrix a -> Nat
+MatrixHeight (MakeMatrix {height} v) = height
+
+--
+
+-- TODO: use nats... and LT
+
+valueAt : (m : Matrix a) -> Fin (MatrixWidth m) -> Fin (MatrixHeight m) -> a
+valueAt m x y = Data.Vect.index y (Data.Vect.index x (values m))
+
+--
+
+{-
+diagSum : Matrix Integer -> (x, y: Nat) -> Maybe Integer
+diagSum m x y = do
+  let maxIndex = min (MatrixWidth m) (MatrixHeight m)
+  x' <- natToFin x maxIndex
+  y' <- natToFin y maxIndex
+  pure $ valueAt m x' y' + valueAt m y' x'
+-}
+
+run_test : Integer
+run_test =
+  let m1 = MakeMatrix [[1, 2], [3, 4]]
+  in valueAt m1 0 1 + valueAt m1 1 0
+
+
 {-
 record Matrix a where
   constructor MakeMatrix
