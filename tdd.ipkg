@@ -25,4 +25,5 @@ modules =
 
 executable = TDD
 main = Main
+pkgs = contrib
 -- tests = BowlingUnsafe.should_be_300_for_perfect_game
