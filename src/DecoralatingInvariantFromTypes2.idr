@@ -93,5 +93,23 @@ record Exercise where
   option : Option
   exercisedQty : Double
 
+data ValidExercise : (e: Exercise) -> Type where
+  MkValidExercise : ValidExercise e
+
+validExercise : (e: Exercise) -> Maybe (ValidExercise e)
+validExercise e =
+  if exercisedQty e <= totalQty (option e)
+    then Just MkValidExercise
+    else Nothing
+
+--
+
+remainingQuantity : (e: Exercise) -> { auto prf : IsJust (validExercise e) } -> Double
+remainingQuantity e = totalQty (option e) - exercisedQty e
+
+test_option_1 : Double
+test_option_1 =
+  let e = MkExercise (MkOption "EUR/USD" 1000) 100
+  in remainingQuantity e
 
 --
