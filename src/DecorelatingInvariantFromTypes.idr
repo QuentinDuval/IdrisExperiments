@@ -17,19 +17,43 @@ MatrixHeight (MakeMatrix {height} v) = height
 
 -- TODO: use nats... and LT
 
-valueAt : (m : Matrix a) -> Fin (MatrixWidth m) -> Fin (MatrixHeight m) -> a
-valueAt m x y = Data.Vect.index y (Data.Vect.index x (values m))
+natToFin' : Nat -> (n : Nat) -> Maybe (Fin n)
+natToFin' Z     (S j) = Just FZ
+natToFin' (S k) (S j) with (natToFin' k j)
+                          | Just k' = Just (FS k')
+                          | Nothing = Nothing
+natToFin' _ _ = Nothing
+
+{-
+castNatToFin : (x : Nat) -> (m : Nat) -> { auto ok : LT x m } -> Fin m
+castNatToFin Z m' = the (Fin m') ?hole
+castNatToFin (S x') (S m') {ok = LT (S x') (S m')} = FS (weaken (castNatToFin x' m'))
+castNatToFin (S x') Z impossible
+-}
+
+total
+castNatToFin : (x : Nat) -> (m : Nat) -> { auto ok : LT x m } -> Fin m
+castNatToFin x (S m) = restrict m (cast x)
+
+total
+valueAt : (m : Matrix a) -> (x, y: Nat)
+          -> { auto okX : LT x (MatrixWidth m) }
+          -> { auto okY : LT y (MatrixHeight m) }
+          -> a
+valueAt m x y =
+  let y' = castNatToFin y (MatrixHeight m)
+      x' = castNatToFin x (MatrixWidth m)
+  in Data.Vect.index y' (Data.Vect.index x' (values m))
 
 --
 
-{-
-diagSum : Matrix Integer -> (x, y: Nat) -> Maybe Integer
-diagSum m x y = do
-  let maxIndex = min (MatrixWidth m) (MatrixHeight m)
-  x' <- natToFin x maxIndex
-  y' <- natToFin y maxIndex
-  pure $ valueAt m x' y' + valueAt m y' x'
--}
+diagSum : (Num a) => (m : Matrix a) -> (x, y: Nat)
+          -> { auto okX : (LT x (MatrixHeight m), LT x (MatrixWidth m)) }
+          -> { auto okY : (LT y (MatrixHeight m), LT y (MatrixWidth m)) }
+          -> a
+diagSum m x y {okX = (_,_)} {okY = (_,_)} =
+  valueAt m x y
+  + valueAt m y x
 
 run_test : Integer
 run_test =
