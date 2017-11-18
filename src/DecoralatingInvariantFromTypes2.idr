@@ -52,15 +52,10 @@ validPerson p =
     then Just MkValidPerson
     else Nothing
 
--- How to check at inputs
+isValidPerson : (p: Person) -> Dec (IsJust (validPerson p))
+isValidPerson p = isItJust (validPerson p)
 
-{-
-isValidName : (name : String) -> Dec (ValidName name)
-isValidName name =
-  case isItJust (validName name) of
-    Yes ItIsJust => ?k
-    No _ => ?hole
--}
+-- How to check at inputs
 
 doStuffOnValidGuy : (p: Person) -> { auto ok : IsJust (validPerson p) } -> String
 doStuffOnValidGuy p = firstName p ++ lastName p ++ email p
@@ -73,7 +68,7 @@ run_test_1 =
 conditionalPersonStuff : Person -> String
 conditionalPersonStuff p =
   let p' = record { firstName $= (++ "scotty") } p
-  in case isItJust (validPerson p') of
+  in case isValidPerson p' of
       Yes _ => doStuffOnValidGuy p'
       No _ => ""
 
@@ -87,5 +82,16 @@ run_test_2 =
 -- SECOND EXAMPLE
 -- The same with records that have link between them
 -- Allows to separate `updates` of record from validity
+
+record Option where
+  constructor MkOption
+  instrument : String
+  totalQty : Double
+
+record Exercise where
+  constructor MkExercise
+  option : Option
+  exercisedQty : Double
+
 
 --
