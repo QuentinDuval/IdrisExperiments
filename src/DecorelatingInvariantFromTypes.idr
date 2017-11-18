@@ -13,8 +13,15 @@ MatrixWidth (MakeMatrix {width} _) = width
 MatrixHeight : Matrix a -> Nat
 MatrixHeight (MakeMatrix {height} _) = height
 
--- MinWidthHeight : Matrix a -> Nat
--- MinWidthHeight (MakeMatrix {height} {width} _) = if height < width then height else width
+data LTWidth : (n : Nat) -> (m : Matrix a) -> Type where
+  MkLTWidth : {auto ok : LT n (MatrixWidth m)} -> LTWidth n m
+
+data LTHeight : (n : Nat) -> (m : Matrix a) -> Type where
+  MkLTHeight : {auto ok : LT n (MatrixHeight m)} -> LTHeight n m
+
+data LTWidthHeight : (n : Nat) -> (m : Matrix a) -> Type where
+  MkLTWidthHeight :
+    { auto okX : LTWidth n m } -> { auto okY : LTHeight n m } -> LTWidthHeight n m
 
 --
 
@@ -24,21 +31,22 @@ castNatToFin x (S m) = restrict m (cast x)
 
 total
 valueAt : (m : Matrix a) -> (x, y: Nat)
-          -> { auto okX : LT x (MatrixWidth m) }
-          -> { auto okY : LT y (MatrixHeight m) }
+          -> { auto okX : LTWidth x m }
+          -> { auto okY : LTHeight y m }
           -> a
-valueAt m x y =
+valueAt m x y {okX = MkLTWidth} {okY = MkLTHeight} =
   let y' = castNatToFin y (MatrixHeight m)
       x' = castNatToFin x (MatrixWidth m)
   in Data.Vect.index y' (Data.Vect.index x' (values m))
 
 --
 
+
 diagSum : (Num a) => (m : Matrix a) -> (x, y: Nat)
-          -> { auto okX : (LT x (MatrixHeight m), LT x (MatrixWidth m)) }
-          -> { auto okY : (LT y (MatrixHeight m), LT y (MatrixWidth m)) }
+          -> { auto okX : LTWidthHeight x m }
+          -> { auto okY : LTWidthHeight y m }
           -> a
-diagSum m x y {okX = (_,_)} {okY = (_,_)} =
+diagSum m x y {okX = MkLTWidthHeight} {okY = MkLTWidthHeight} =
   valueAt m x y
   + valueAt m y x
 
