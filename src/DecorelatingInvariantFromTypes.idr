@@ -23,6 +23,18 @@ data LTWidthHeight : (n : Nat) -> (m : Matrix a) -> Type where
   MkLTWidthHeight :
     { auto okX : LTWidth n m } -> { auto okY : LTHeight n m } -> LTWidthHeight n m
 
+isLTWidth : (x : Nat) -> (m : Matrix a) -> Dec (LTWidth x m)
+isLTWidth n m =
+  case isLTE (S n) (MatrixWidth m) of
+    No contra => No $ \(MkLTWidth {ok}) => contra ok
+    Yes prf => Yes (MkLTWidth {ok = prf})
+
+isLTHeight : (y : Nat) -> (m : Matrix a) -> Dec (LTHeight y m)
+isLTHeight n m =
+  case isLTE (S n) (MatrixHeight m) of
+    No contra => No $ \(MkLTHeight {ok}) => contra ok
+    Yes prf => Yes (MkLTHeight {ok = prf})
+
 --
 
 total
@@ -41,14 +53,12 @@ valueAt m x y {okX = MkLTWidth} {okY = MkLTHeight} =
 
 --
 
-
 diagSum : (Num a) => (m : Matrix a) -> (x, y: Nat)
           -> { auto okX : LTWidthHeight x m }
           -> { auto okY : LTWidthHeight y m }
           -> a
 diagSum m x y {okX = MkLTWidthHeight} {okY = MkLTWidthHeight} =
-  valueAt m x y
-  + valueAt m y x
+  valueAt m x y + valueAt m y x
 
 run_test : Integer
 run_test =
@@ -56,6 +66,16 @@ run_test =
   in diagSum m1 0 1
      + valueAt m1 1 2
      + diagSum m1 1 1
+
+run_test' : (Num a) => Matrix a -> Nat -> Nat -> a
+run_test' m x y =
+  case isLTWidth x m of
+    No _ => 0
+    Yes okX =>
+      case isLTHeight y m of
+        No _ => 0
+        Yes okY => valueAt m x y
+
 
 {-
 record Matrix a where
