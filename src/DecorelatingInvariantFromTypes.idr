@@ -39,6 +39,7 @@ isLTHeight n m =
 
 total
 castNatToFin : (x : Nat) -> (m : Nat) -> { auto ok : LT x m } -> Fin m
+castNatToFin x Z impossible
 castNatToFin x (S m) = restrict m (cast x)
 
 total
