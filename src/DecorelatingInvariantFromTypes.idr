@@ -8,28 +8,15 @@ record Matrix a where
   values : Vect width (Vect height a)
 
 MatrixWidth : Matrix a -> Nat
-MatrixWidth (MakeMatrix {width} v) = width
+MatrixWidth (MakeMatrix {width} _) = width
 
 MatrixHeight : Matrix a -> Nat
-MatrixHeight (MakeMatrix {height} v) = height
+MatrixHeight (MakeMatrix {height} _) = height
+
+-- MinWidthHeight : Matrix a -> Nat
+-- MinWidthHeight (MakeMatrix {height} {width} _) = if height < width then height else width
 
 --
-
--- TODO: use nats... and LT
-
-natToFin' : Nat -> (n : Nat) -> Maybe (Fin n)
-natToFin' Z     (S j) = Just FZ
-natToFin' (S k) (S j) with (natToFin' k j)
-                          | Just k' = Just (FS k')
-                          | Nothing = Nothing
-natToFin' _ _ = Nothing
-
-{-
-castNatToFin : (x : Nat) -> (m : Nat) -> { auto ok : LT x m } -> Fin m
-castNatToFin Z m' = the (Fin m') ?hole
-castNatToFin (S x') (S m') {ok = LT (S x') (S m')} = FS (weaken (castNatToFin x' m'))
-castNatToFin (S x') Z impossible
--}
 
 total
 castNatToFin : (x : Nat) -> (m : Nat) -> { auto ok : LT x m } -> Fin m
@@ -57,9 +44,10 @@ diagSum m x y {okX = (_,_)} {okY = (_,_)} =
 
 run_test : Integer
 run_test =
-  let m1 = MakeMatrix [[1, 2], [3, 4]]
-  in valueAt m1 0 1 + valueAt m1 1 0
-
+  let m1 = MakeMatrix [[1, 2, 3], [4, 5, 6]]
+  in diagSum m1 0 1
+     + valueAt m1 1 2
+     + diagSum m1 1 1
 
 {-
 record Matrix a where
