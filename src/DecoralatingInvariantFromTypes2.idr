@@ -98,7 +98,7 @@ data ValidExercise : (e: Exercise) -> Type where
 
 validExercise : (e: Exercise) -> Maybe (ValidExercise e)
 validExercise e =
-  if exercisedQty e <= totalQty (option e)
+  if exercisedQty e <= totalQty (option e) -- LT cannot work because of doubles...
     then Just MkValidExercise
     else Nothing
 
@@ -111,5 +111,16 @@ test_option_1 : Double
 test_option_1 =
   let e = MkExercise (MkOption "EUR/USD" 1000) 100
   in remainingQuantity e
+
+conditionalQuantity : (e: Exercise) -> Maybe Double
+conditionalQuantity e =
+  case isItJust (validExercise e) of
+    Yes _ => Just $ remainingQuantity e
+    No _ => Nothing
+
+test_option_2 : Maybe Double
+test_option_2 =
+  let e = MkExercise (MkOption "EUR/USD" 1000) 100
+  in conditionalQuantity e
 
 --
