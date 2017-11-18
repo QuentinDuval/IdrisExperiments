@@ -53,6 +53,11 @@ isValidName name =
 -}
 
 onValidGuy : (p: Person) -> { auto prf : IsJust (validPerson p) } -> String
-onValidGuy p = ?hole
+onValidGuy p = firstName p ++ lastName p ++ email p
+
+run_test : String
+run_test =
+  let p = MkPerson "titi" "titi" "titi@gmail.com"
+  in onValidGuy p
 
 --
