@@ -41,24 +41,50 @@ validMail email =
     then Just MkValidMail
     else Nothing
 
+{-
+-- TODO: GADT to do better for pattern matching after???
+ValidPerson : (p: Person) -> Type
+ValidPerson p = ( ValidName (firstName p)
+                , ValidName (lastName p)
+                , ValidMail (email p))
+
+-- Would be bad! Does not exploit knowledge aquired
+-- data ValidPerson : (p: Person) -> Type where
+--   MkValidPerson : ValidPerson p
+
+-- TODO: would work if we had just "ValidMail (email p)", not IsJust
+validPerson : (p: Person) -> Maybe (ValidPerson p)
+validPerson p = do
+  firstNameValid <- validName (firstName p)
+  lastNameValid <- validName (lastName p)
+  emailValid <- validMail (email p)
+  pure (firstNameValid, lastNameValid, emailValid)
+-}
+
 data ValidPerson : (p: Person) -> Type where
-  MkValidPerson : ValidPerson p
+  MkValidPerson :
+    { auto okFirstName : IsJust (validName (firstName p)) }
+    -> { auto okLastName : IsJust (validName (lastName p)) }
+    -> { auto okEmail : IsJust (validMail (email p)) }
+    -> ValidPerson p
 
 validPerson : (p: Person) -> Maybe (ValidPerson p)
 validPerson p =
-  if isJust (validName (firstName p))
-     && isJust (validName (lastName p))
-     && isJust (validMail (email p))
-    then Just MkValidPerson
-    else Nothing
-
-isValidPerson : (p: Person) -> Dec (IsJust (validPerson p))
-isValidPerson p = isItJust (validPerson p)
+  case isItJust (validName (firstName p)) of
+    No _ => Nothing
+    Yes _ => case isItJust (validName (lastName p)) of
+      No _ => Nothing
+      Yes _ => case isItJust (validMail (email p)) of
+        No _ => Nothing
+        Yes _ => Just MkValidPerson
 
 -- How to check at inputs
 
-doStuffOnValidGuy : (p: Person) -> { auto ok : IsJust (validPerson p) } -> String
-doStuffOnValidGuy p = firstName p ++ lastName p ++ email p
+doStuffOnValidMail : (e: String) -> { auto ok : IsJust (validMail p) } -> String
+doStuffOnValidMail e = e ++ " - validated"
+
+doStuffOnValidGuy : (p: Person) -> { auto ok : ValidPerson p } -> String
+doStuffOnValidGuy p {ok = MkValidPerson} = firstName p ++ lastName p ++ doStuffOnValidMail (email p)
 
 run_test_1 : String
 run_test_1 =
@@ -68,9 +94,9 @@ run_test_1 =
 conditionalPersonStuff : Person -> String
 conditionalPersonStuff p =
   let p' = record { firstName $= (++ "scotty") } p
-  in case isValidPerson p' of
-      Yes _ => doStuffOnValidGuy p'
-      No _ => ""
+  in case validPerson p' of
+      Just _ => doStuffOnValidGuy p'
+      Nothing => ""
 
 run_test_2 : String
 run_test_2 =
