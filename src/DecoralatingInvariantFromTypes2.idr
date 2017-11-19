@@ -37,7 +37,7 @@ data ValidMail : (s: String) -> Type where
 
 validMail : (email : String) -> Maybe (ValidMail email)
 validMail email =
-  if elem '@' (unpack email)
+  if length (split (== '@') email) == 2
     then Just MkValidMail
     else Nothing
 
