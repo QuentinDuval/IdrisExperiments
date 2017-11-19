@@ -7,6 +7,7 @@ import Data.SortedSet
 -- * WAY NUMBER ONE: Invariant on each attributes
 -- * WAT NUMBER TWO: Transform into validated data structures (template then???)
 
+public export
 record Person where
   constructor MkPerson
   firstName : String
@@ -15,59 +16,47 @@ record Person where
 
 -- Attribute validity
 
-data ValidName : (s : String) -> Type where
-  MkValidName : ValidName s
-
+public export
 upperCases : List Char
 upperCases = ['A'..'Z']
 
+public export
 lowerCases : List Char
 lowerCases = ['a'..'z']
 
-validName : (name : String) -> Maybe (ValidName name)
+public export
+validName : (name : String) -> Maybe String
 validName name = check (unpack name) where
   check [] = Nothing
   check (x::xs) =
     if elem x upperCases && all (\x => elem x lowerCases) xs
-      then Just MkValidName
+      then Just name
       else Nothing
 
-data ValidMail : (s: String) -> Type where
-  MkValidMail : ValidMail s
+public export
+data ValidName : (s : String) -> Type where
+  MkValidName : {auto ok : IsJust (validName s)} -> ValidName s
 
-validMail : (email : String) -> Maybe (ValidMail email)
+public export
+validMail : (email : String) -> Maybe String
 validMail email =
   if length (split (== '@') email) == 2
-    then Just MkValidMail
+    then Just email
     else Nothing
 
-{-
--- TODO: GADT to do better for pattern matching after???
-ValidPerson : (p: Person) -> Type
-ValidPerson p = ( ValidName (firstName p)
-                , ValidName (lastName p)
-                , ValidMail (email p))
+public export
+data ValidMail : (s: String) -> Type where
+  MkValidMail : {auto ok : IsJust (validMail s)} -> ValidMail s
 
--- Would be bad! Does not exploit knowledge aquired
--- data ValidPerson : (p: Person) -> Type where
---   MkValidPerson : ValidPerson p
-
--- TODO: would work if we had just "ValidMail (email p)", not IsJust
-validPerson : (p: Person) -> Maybe (ValidPerson p)
-validPerson p = do
-  firstNameValid <- validName (firstName p)
-  lastNameValid <- validName (lastName p)
-  emailValid <- validMail (email p)
-  pure (firstNameValid, lastNameValid, emailValid)
--}
-
+public export
 data ValidPerson : (p: Person) -> Type where
   MkValidPerson :
-    { auto okFirstName : IsJust (validName (firstName p)) }
-    -> { auto okLastName : IsJust (validName (lastName p)) }
-    -> { auto okEmail : IsJust (validMail (email p)) }
+    { auto okFirstName : ValidName (firstName p) }
+    -> { auto okLastName : ValidName (lastName p) }
+    -> { auto okEmail : ValidMail (email p) }
     -> ValidPerson p
 
+public export
 validPerson : (p: Person) -> Maybe (ValidPerson p)
 validPerson p =
   case isItJust (validName (firstName p)) of
@@ -78,36 +67,16 @@ validPerson p =
         No _ => Nothing
         Yes _ => Just MkValidPerson
 
--- How to check at inputs
-
-doStuffOnValidMail : (e: String) -> { auto ok : IsJust (validMail p) } -> String
-doStuffOnValidMail e = e ++ " - validated"
-
-doStuffOnValidGuy : (p: Person) -> { auto ok : ValidPerson p } -> String
-doStuffOnValidGuy p {ok = MkValidPerson} = firstName p ++ lastName p ++ doStuffOnValidMail (email p)
-
-run_test_1 : String
-run_test_1 =
-  let p = MkPerson "Obiwan" "Kenobi" "obiwan@kenobi.com"
-  in doStuffOnValidGuy p
-
-conditionalPersonStuff : Person -> String
-conditionalPersonStuff p =
-  let p' = record { firstName $= (++ "scotty") } p
-  in case validPerson p' of
-      Just _ => doStuffOnValidGuy p'
-      Nothing => ""
-
-run_test_2 : String
-run_test_2 =
-  let p1 = MkPerson "Obiwan" "Kenobi" "obiwan@kenobi.com"
-      p2 = MkPerson "__!!" "??" "obiwan-kenobi.com"
-  in conditionalPersonStuff p1 ++ conditionalPersonStuff p2
+--------------------------------------------------------------------------------
+-- Check DecoralatingInvariantFromTypes3
+--------------------------------------------------------------------------------
 
 
+--------------------------------------------------------------------------------
 -- SECOND EXAMPLE
 -- The same with records that have link between them
 -- Allows to separate `updates` of record from validity
+--------------------------------------------------------------------------------
 
 record Option where
   constructor MkOption

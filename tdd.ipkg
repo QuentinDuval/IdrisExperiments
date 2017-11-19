@@ -9,6 +9,7 @@ modules =
   Chapter3,
   DecoralatingInvariantFromTypes,
   DecoralatingInvariantFromTypes2,
+  DecoralatingInvariantFromTypes3,
   DoNotation,
   Fibonacci,
   FreeMonad,
