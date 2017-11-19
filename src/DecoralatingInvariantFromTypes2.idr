@@ -78,44 +78,27 @@ validPerson p =
 -- Allows to separate `updates` of record from validity
 --------------------------------------------------------------------------------
 
+public export
 record Option where
   constructor MkOption
   instrument : String
   totalQty : Double
 
+public export
 record Exercise where
   constructor MkExercise
   option : Option
   exercisedQty : Double
 
-data ValidExercise : (e: Exercise) -> Type where
-  MkValidExercise : ValidExercise e
-
-validExercise : (e: Exercise) -> Maybe (ValidExercise e)
+public export
+validExercise : (e: Exercise) -> Maybe Exercise
 validExercise e =
   if exercisedQty e <= totalQty (option e) -- LT cannot work because of doubles...
-    then Just MkValidExercise
+    then Just e
     else Nothing
 
---
-
-remainingQuantity : (e: Exercise) -> { auto prf : IsJust (validExercise e) } -> Double
-remainingQuantity e = totalQty (option e) - exercisedQty e
-
-test_option_1 : Double
-test_option_1 =
-  let e = MkExercise (MkOption "EUR/USD" 1000) 100
-  in remainingQuantity e
-
-conditionalQuantity : (e: Exercise) -> Maybe Double
-conditionalQuantity e =
-  case isItJust (validExercise e) of
-    Yes _ => Just $ remainingQuantity e
-    No _ => Nothing
-
-test_option_2 : Maybe Double
-test_option_2 =
-  let e = MkExercise (MkOption "EUR/USD" 1000) 100
-  in conditionalQuantity e
+public export
+data ValidExercise : (e: Exercise) -> Type where
+  MkValidExercise : {auto ok : IsJust (validExercise e)} -> ValidExercise e
 
 --

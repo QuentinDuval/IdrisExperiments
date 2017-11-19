@@ -29,3 +29,24 @@ run_test_2 =
   in conditionalPersonStuff p1 ++ conditionalPersonStuff p2
 
 --
+
+remainingQuantity : (e: Exercise) -> { auto prf : ValidExercise e } -> Double
+remainingQuantity e = totalQty (option e) - exercisedQty e
+
+test_option_1 : Double
+test_option_1 =
+  let e = MkExercise (MkOption "EUR/USD" 1000) 100
+  in remainingQuantity e
+
+conditionalQuantity : (e: Exercise) -> Maybe Double
+conditionalQuantity e =
+  case isItJust (validExercise e) of
+    Yes _ => Just $ remainingQuantity e
+    No _ => Nothing
+
+test_option_2 : Maybe Double
+test_option_2 =
+  let e = MkExercise (MkOption "EUR/USD" 1000) 100
+  in conditionalQuantity e
+
+--
